@@ -1,0 +1,45 @@
+import Foundation
+
+/// Represents a KeePass group (folder) containing entries and subgroups
+final class KPGroup: Identifiable, Sendable {
+    let id: UUID
+    let name: String
+    let iconID: Int
+    let entries: [KPEntry]
+    let groups: [KPGroup]
+    let isExpanded: Bool
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        iconID: Int = 48,
+        entries: [KPEntry] = [],
+        groups: [KPGroup] = [],
+        isExpanded: Bool = true
+    ) {
+        self.id = id
+        self.name = name
+        self.iconID = iconID
+        self.entries = entries
+        self.groups = groups
+        self.isExpanded = isExpanded
+    }
+
+    /// Recursively find all entries in this group and subgroups
+    var allEntries: [KPEntry] {
+        entries + groups.flatMap(\.allEntries)
+    }
+
+    /// System icon name based on KeePass icon ID
+    var systemIconName: String {
+        switch iconID {
+        case 0: "key.fill"
+        case 1: "globe"
+        case 2: "exclamationmark.triangle"
+        case 3: "server.rack"
+        case 48: "folder.fill"
+        case 49: "folder.fill"
+        default: "folder.fill"
+        }
+    }
+}
