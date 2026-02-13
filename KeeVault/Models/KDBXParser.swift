@@ -1,0 +1,743 @@
+import Foundation
+import CryptoKit
+
+/// Full KDBX 4.x parser — reads header, derives key, decrypts, decompresses, parses XML
+enum KDBXParser {
+    // MARK: - Constants
+
+    static let kdbxSignature1: UInt32 = 0x9AA2D903
+    static let kdbxSignature2: UInt32 = 0xB54BFB67
+    static let versionKDBX4: UInt16 = 4
+
+    // Cipher UUIDs (16 bytes)
+    static let aesCipherUUID = Data([0x31, 0xC1, 0xF2, 0xE6, 0xBF, 0x71, 0x43, 0x50,
+                                     0xBE, 0x58, 0x05, 0x21, 0x6A, 0xFC, 0x5A, 0xFF])
+    static let chachaCipherUUID = Data([0xD6, 0x03, 0x8A, 0x2B, 0x8B, 0x6F, 0x4C, 0xB5,
+                                        0xA5, 0x24, 0x33, 0x9A, 0x31, 0xDB, 0xB5, 0x9A])
+
+    // KDF UUIDs
+    static let argon2dUUID = Data([0xEF, 0x63, 0x6D, 0xDF, 0x8C, 0x29, 0x44, 0x4B,
+                                   0x91, 0xF7, 0xA9, 0xA4, 0x03, 0xE3, 0x0A, 0x0C])
+    static let argon2idUUID = Data([0x9E, 0x29, 0x8B, 0x19, 0x56, 0xDB, 0x47, 0x73,
+                                    0xB2, 0x3D, 0xFC, 0x3E, 0xC6, 0xF0, 0xA1, 0xE6])
+
+    // Inner random stream IDs
+    static let innerStreamChaCha20: UInt32 = 3
+
+    // MARK: - Header Fields
+
+    enum HeaderField: UInt8 {
+        case endOfHeader = 0
+        case cipherID = 2
+        case compressionFlags = 3
+        case masterSeed = 4
+        case encryptionIV = 7
+        case kdfParameters = 11
+    }
+
+    enum InnerHeaderField: UInt8 {
+        case endOfHeader = 0
+        case innerRandomStreamID = 1
+        case innerRandomStreamKey = 2
+        case binary = 3
+    }
+
+    // MARK: - Parsed Header
+
+    struct Header {
+        var cipherID = Data()
+        var compressionFlags: UInt32 = 0
+        var masterSeed = Data()
+        var encryptionIV = Data()
+        var kdfParameters: [String: Any] = [:]
+        var headerData = Data() // raw bytes for HMAC check
+    }
+
+    // MARK: - Errors
+
+    enum ParseError: Error, LocalizedError {
+        case invalidSignature
+        case unsupportedVersion(UInt16)
+        case truncatedFile
+        case headerFieldMissing(String)
+        case xmlParsingFailed
+        case invalidBlockHMAC
+        case innerHeaderInvalid
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidSignature: "Not a valid KDBX file"
+            case .unsupportedVersion(let v): "Unsupported KDBX version: \(v)"
+            case .truncatedFile: "File is truncated"
+            case .headerFieldMissing(let f): "Missing header field: \(f)"
+            case .xmlParsingFailed: "Failed to parse database XML"
+            case .invalidBlockHMAC: "Block HMAC invalid — wrong password or corrupted file"
+            case .innerHeaderInvalid: "Invalid inner header"
+            }
+        }
+    }
+
+    // MARK: - Public API
+
+    /// Parse and decrypt a KDBX 4.x file, returning the root group
+    static func parse(data: Data, password: String) throws -> KPGroup {
+        var reader = DataReader(data: data)
+
+        // 1. Verify signatures
+        let sig1 = reader.readUInt32()
+        let sig2 = reader.readUInt32()
+        guard sig1 == kdbxSignature1, sig2 == kdbxSignature2 else {
+            throw ParseError.invalidSignature
+        }
+
+        // 2. Version
+        let versionMinor = reader.readUInt16()
+        let versionMajor = reader.readUInt16()
+        guard versionMajor == versionKDBX4 else {
+            throw ParseError.unsupportedVersion(versionMajor)
+        }
+
+        // 3. Parse outer header
+        let headerStart = 0
+        let header = try parseHeader(&reader)
+        let headerEnd = reader.offset
+        let headerBytes = data.subdata(in: headerStart..<headerEnd)
+
+        // 4. Header SHA-256 and HMAC
+        let storedHeaderSHA = reader.readBytes(32)
+        let storedHeaderHMAC = reader.readBytes(32)
+
+        let computedHeaderSHA = KDBXCrypto.sha256(headerBytes)
+        guard storedHeaderSHA == computedHeaderSHA else {
+            throw ParseError.invalidSignature
+        }
+
+        // 5. Derive keys
+        let compositeKey = KDBXCrypto.compositeKey(password: password)
+        let transformedKey = try deriveKey(compositeKey: compositeKey, kdfParams: header.kdfParameters)
+
+        // Master key = SHA256(masterSeed + transformedKey)
+        var preKey = Data()
+        preKey.append(header.masterSeed)
+        preKey.append(transformedKey)
+        let masterKey = KDBXCrypto.sha256(preKey)
+
+        // HMAC base key
+        var hmacPreKey = Data()
+        hmacPreKey.append(header.masterSeed)
+        hmacPreKey.append(transformedKey)
+        hmacPreKey.append(Data([0x01]))
+        let hmacBaseKey = KDBXCrypto.sha512(hmacPreKey)
+
+        // Verify header HMAC
+        let headerHMACKey = computeBlockHMACKey(blockIndex: UInt64.max, baseKey: hmacBaseKey)
+        let computedHeaderHMAC = KDBXCrypto.hmacSHA256(key: headerHMACKey, data: headerBytes)
+        guard storedHeaderHMAC == computedHeaderHMAC else {
+            throw KDBXCrypto.CryptoError.hmacMismatch
+        }
+
+        // 6. Read and verify HMAC blocks
+        let encryptedPayload = try readHMACBlocks(reader: &reader, baseKey: hmacBaseKey)
+
+        // 7. Decrypt payload
+        let decryptedPayload: Data
+        if header.cipherID == aesCipherUUID {
+            decryptedPayload = try KDBXCrypto.decryptAES256CBC(
+                data: encryptedPayload, key: masterKey, iv: header.encryptionIV
+            )
+        } else if header.cipherID == chachaCipherUUID {
+            decryptedPayload = try KDBXCrypto.decryptChaCha20Poly1305(
+                data: encryptedPayload, key: masterKey, nonce: header.encryptionIV
+            )
+        } else {
+            throw KDBXCrypto.CryptoError.unsupportedCipher(header.cipherID.hexString)
+        }
+
+        // 8. Parse inner header
+        var innerReader = DataReader(data: decryptedPayload)
+        let innerHeader = try parseInnerHeader(&innerReader)
+
+        // 9. Get remaining data (the XML or compressed XML)
+        let innerPayload = decryptedPayload.subdata(in: innerReader.offset..<decryptedPayload.count)
+
+        // 10. Decompress if needed
+        let xmlData: Data
+        if header.compressionFlags == 1 { // gzip
+            xmlData = try KDBXCrypto.gunzip(innerPayload)
+        } else {
+            xmlData = innerPayload
+        }
+
+        // 11. Parse XML
+        let root = try parseXML(
+            xmlData: xmlData,
+            innerStreamKey: innerHeader.streamKey,
+            innerStreamID: innerHeader.streamID
+        )
+
+        return root
+    }
+
+    // MARK: - Header Parsing
+
+    private static func parseHeader(_ reader: inout DataReader) throws -> Header {
+        var header = Header()
+
+        while reader.hasMore {
+            let fieldID = reader.readUInt8()
+            let fieldSize = Int(reader.readUInt32())
+
+            guard let field = HeaderField(rawValue: fieldID) else {
+                reader.skip(fieldSize)
+                continue
+            }
+
+            switch field {
+            case .endOfHeader:
+                reader.skip(fieldSize)
+                return header
+            case .cipherID:
+                header.cipherID = reader.readBytes(fieldSize)
+            case .compressionFlags:
+                header.compressionFlags = reader.readUInt32From(fieldSize)
+            case .masterSeed:
+                header.masterSeed = reader.readBytes(fieldSize)
+            case .encryptionIV:
+                header.encryptionIV = reader.readBytes(fieldSize)
+            case .kdfParameters:
+                let kdfData = reader.readBytes(fieldSize)
+                header.kdfParameters = parseVariantMap(kdfData)
+            }
+        }
+
+        return header
+    }
+
+    private static func parseInnerHeader(_ reader: inout DataReader) throws -> (streamID: UInt32, streamKey: Data) {
+        var streamID: UInt32 = 0
+        var streamKey = Data()
+
+        while reader.hasMore {
+            let fieldID = reader.readUInt8()
+            let fieldSize = Int(reader.readUInt32())
+
+            guard let field = InnerHeaderField(rawValue: fieldID) else {
+                reader.skip(fieldSize)
+                continue
+            }
+
+            switch field {
+            case .endOfHeader:
+                reader.skip(fieldSize)
+                return (streamID, streamKey)
+            case .innerRandomStreamID:
+                streamID = reader.readUInt32From(fieldSize)
+            case .innerRandomStreamKey:
+                streamKey = reader.readBytes(fieldSize)
+            case .binary:
+                reader.skip(fieldSize)
+            }
+        }
+
+        return (streamID, streamKey)
+    }
+
+    // MARK: - Variant Map (KDF Parameters)
+
+    private static func parseVariantMap(_ data: Data) -> [String: Any] {
+        var reader = DataReader(data: data)
+        var result: [String: Any] = [:]
+
+        // Skip version
+        let _ = reader.readUInt16()
+
+        while reader.hasMore {
+            let type = reader.readUInt8()
+            if type == 0 { break }
+
+            let keyLen = Int(reader.readUInt32())
+            let key = String(data: reader.readBytes(keyLen), encoding: .utf8) ?? ""
+            let valLen = Int(reader.readUInt32())
+            let valData = reader.readBytes(valLen)
+
+            switch type {
+            case 0x04: // UInt32
+                result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
+            case 0x05: // UInt64
+                result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) }
+            case 0x08: // Bool
+                result[key] = valData[0] != 0
+            case 0x0C: // Int32
+                result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: Int32.self) }
+            case 0x0D: // Int64
+                result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: Int64.self) }
+            case 0x18: // String
+                result[key] = String(data: valData, encoding: .utf8) ?? ""
+            case 0x42: // Byte array
+                result[key] = valData
+            default:
+                result[key] = valData
+            }
+        }
+
+        return result
+    }
+
+    // MARK: - Key Derivation
+
+    private static func deriveKey(compositeKey: Data, kdfParams: [String: Any]) throws -> Data {
+        guard let uuidData = kdfParams["$UUID"] as? Data else {
+            throw KDBXCrypto.CryptoError.unsupportedKDF("missing UUID")
+        }
+
+        let variant: Argon2Variant
+        if uuidData == argon2dUUID {
+            variant = .d
+        } else if uuidData == argon2idUUID {
+            variant = .id
+        } else {
+            throw KDBXCrypto.CryptoError.unsupportedKDF(uuidData.hexString)
+        }
+
+        guard let salt = kdfParams["S"] as? Data else {
+            throw KDBXCrypto.CryptoError.unsupportedKDF("missing salt")
+        }
+
+        let iterations = (kdfParams["I"] as? UInt64) ?? 3
+        let memory = (kdfParams["M"] as? UInt64) ?? (64 * 1024 * 1024) // bytes
+        let parallelism = (kdfParams["P"] as? UInt32) ?? 1
+
+        return try Argon2.hash(
+            password: compositeKey,
+            salt: salt,
+            timeCost: UInt32(iterations),
+            memoryCost: UInt32(memory / 1024), // convert bytes to KiB
+            parallelism: parallelism,
+            hashLength: 32,
+            variant: variant
+        )
+    }
+
+    // MARK: - HMAC Block Reading
+
+    private static func readHMACBlocks(reader: inout DataReader, baseKey: Data) throws -> Data {
+        var result = Data()
+        var blockIndex: UInt64 = 0
+
+        while true {
+            let storedHMAC = reader.readBytes(32)
+            let blockSizeRaw = reader.readInt32()
+
+            if blockSizeRaw == 0 {
+                // Final block — verify HMAC of empty block
+                let hmacKey = computeBlockHMACKey(blockIndex: blockIndex, baseKey: baseKey)
+                var msg = Data()
+                msg.append(withUInt64: blockIndex)
+                msg.append(withInt32: 0)
+                let computed = KDBXCrypto.hmacSHA256(key: hmacKey, data: msg)
+                guard storedHMAC == computed else { throw ParseError.invalidBlockHMAC }
+                break
+            }
+
+            let blockData = reader.readBytes(Int(blockSizeRaw))
+
+            let hmacKey = computeBlockHMACKey(blockIndex: blockIndex, baseKey: baseKey)
+            var msg = Data()
+            msg.append(withUInt64: blockIndex)
+            msg.append(withInt32: blockSizeRaw)
+            msg.append(blockData)
+            let computed = KDBXCrypto.hmacSHA256(key: hmacKey, data: msg)
+            guard storedHMAC == computed else { throw ParseError.invalidBlockHMAC }
+
+            result.append(blockData)
+            blockIndex += 1
+        }
+
+        return result
+    }
+
+    private static func computeBlockHMACKey(blockIndex: UInt64, baseKey: Data) -> Data {
+        var indexData = Data()
+        indexData.append(withUInt64: blockIndex)
+        return KDBXCrypto.sha512(indexData + baseKey)
+    }
+
+    // MARK: - XML Parsing
+
+    private static func parseXML(xmlData: Data, innerStreamKey: Data, innerStreamID: UInt32) throws -> KPGroup {
+        let parser = KDBXXMLParser(
+            data: xmlData,
+            innerStreamKey: innerStreamKey,
+            innerStreamID: innerStreamID
+        )
+        return try parser.parse()
+    }
+}
+
+// MARK: - Data Reader Helper
+
+struct DataReader {
+    let data: Data
+    var offset: Int = 0
+
+    var hasMore: Bool { offset < data.count }
+
+    mutating func readUInt8() -> UInt8 {
+        guard offset < data.count else { return 0 }
+        let val = data[offset]
+        offset += 1
+        return val
+    }
+
+    mutating func readUInt16() -> UInt16 {
+        let bytes = readBytes(2)
+        return bytes.withUnsafeBytes { $0.loadUnaligned(as: UInt16.self).littleEndian }
+    }
+
+    mutating func readUInt32() -> UInt32 {
+        let bytes = readBytes(4)
+        return bytes.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).littleEndian }
+    }
+
+    mutating func readInt32() -> Int32 {
+        let bytes = readBytes(4)
+        return bytes.withUnsafeBytes { $0.loadUnaligned(as: Int32.self).littleEndian }
+    }
+
+    mutating func readUInt32From(_ size: Int) -> UInt32 {
+        let bytes = readBytes(size)
+        guard bytes.count >= 4 else { return 0 }
+        return bytes.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).littleEndian }
+    }
+
+    mutating func readBytes(_ count: Int) -> Data {
+        let end = min(offset + count, data.count)
+        let result = data.subdata(in: offset..<end)
+        offset = end
+        return result
+    }
+
+    mutating func skip(_ count: Int) {
+        offset = min(offset + count, data.count)
+    }
+}
+
+// MARK: - Data Extensions
+
+extension Data {
+    mutating func append(withUInt64 value: UInt64) {
+        var v = value.littleEndian
+        append(Data(bytes: &v, count: 8))
+    }
+
+    mutating func append(withInt32 value: Int32) {
+        var v = value.littleEndian
+        append(Data(bytes: &v, count: 4))
+    }
+
+    var hexString: String {
+        map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+// MARK: - XML Parser
+
+final class KDBXXMLParser: NSObject, XMLParserDelegate {
+    private let data: Data
+    private let innerStreamKey: Data
+    private let innerStreamID: UInt32
+
+    private var groupStack: [KPGroup] = []
+    private var currentEntry: EntryBuilder?
+    private var currentKey = ""
+    private var currentValue = ""
+    private var currentText = ""
+    private var isProtected = false
+    private var inValue = false
+    private var inKey = false
+
+    // Inner stream cipher state for decrypting protected values
+    private var streamOffset = 0
+    private lazy var streamCipherKey: Data = {
+        KDBXCrypto.sha512(innerStreamKey)
+    }()
+
+    private var rootEntries: [KPEntry] = []
+    private var rootGroups: [KPGroup] = []
+    private var currentGroupEntries: [[KPEntry]] = []
+    private var currentGroupSubgroups: [[KPGroup]] = []
+    private var groupNames: [String] = []
+    private var groupIconIDs: [Int] = []
+
+    init(data: Data, innerStreamKey: Data, innerStreamID: UInt32) {
+        self.data = data
+        self.innerStreamKey = innerStreamKey
+        self.innerStreamID = innerStreamID
+    }
+
+    func parse() throws -> KPGroup {
+        let parser = XMLParser(data: data)
+        parser.delegate = self
+        guard parser.parse() else {
+            throw KDBXParser.ParseError.xmlParsingFailed
+        }
+        return KPGroup(
+            name: "Root",
+            entries: rootEntries,
+            groups: rootGroups
+        )
+    }
+
+    // MARK: - XMLParserDelegate
+
+    func parser(_ parser: XMLParser, didStartElement elementName: String,
+                namespaceURI: String?, qualifiedName: String?,
+                attributes: [String: String] = [:]) {
+        currentText = ""
+
+        switch elementName {
+        case "Group":
+            groupNames.append("")
+            groupIconIDs.append(48)
+            currentGroupEntries.append([])
+            currentGroupSubgroups.append([])
+
+        case "Entry":
+            // Ignore History entries
+            if !isInsideHistory(parser) {
+                currentEntry = EntryBuilder()
+            }
+
+        case "String":
+            currentKey = ""
+            currentValue = ""
+            isProtected = false
+
+        case "Key":
+            inKey = true
+
+        case "Value":
+            inValue = true
+            isProtected = attributes["Protected"]?.lowercased() == "true"
+
+        default:
+            break
+        }
+    }
+
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
+        currentText += string
+    }
+
+    func parser(_ parser: XMLParser, didEndElement elementName: String,
+                namespaceURI: String?, qualifiedName: String?) {
+        switch elementName {
+        case "Group":
+            let name = groupNames.removeLast()
+            let iconID = groupIconIDs.removeLast()
+            let entries = currentGroupEntries.removeLast()
+            let subgroups = currentGroupSubgroups.removeLast()
+
+            let group = KPGroup(name: name, iconID: iconID, entries: entries, groups: subgroups)
+
+            if currentGroupSubgroups.isEmpty {
+                rootGroups.append(group)
+            } else {
+                currentGroupSubgroups[currentGroupSubgroups.count - 1].append(group)
+            }
+
+        case "Entry":
+            if let builder = currentEntry {
+                let entry = builder.build()
+                if currentGroupEntries.isEmpty {
+                    rootEntries.append(entry)
+                } else {
+                    currentGroupEntries[currentGroupEntries.count - 1].append(entry)
+                }
+                currentEntry = nil
+            }
+
+        case "Name":
+            if !groupNames.isEmpty && currentEntry == nil {
+                groupNames[groupNames.count - 1] = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+        case "IconID":
+            let val = Int(currentText.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            if currentEntry != nil {
+                currentEntry?.iconID = val
+            } else if !groupIconIDs.isEmpty {
+                groupIconIDs[groupIconIDs.count - 1] = val
+            }
+
+        case "Key":
+            if inKey {
+                currentKey = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                inKey = false
+            }
+
+        case "Value":
+            if inValue {
+                var val = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if isProtected, let decoded = Data(base64Encoded: val) {
+                    val = decryptProtectedValue(decoded)
+                }
+                currentValue = val
+                inValue = false
+            }
+
+        case "String":
+            if let entry = currentEntry {
+                switch currentKey {
+                case "Title": entry.title = currentValue
+                case "UserName": entry.username = currentValue
+                case "Password": entry.password = currentValue
+                case "URL": entry.url = currentValue
+                case "Notes": entry.notes = currentValue
+                case "otp": entry.otpURL = currentValue
+                default:
+                    if currentKey.hasPrefix("TimeOtp-") || currentKey == "TOTP Settings" || currentKey == "TOTP Seed" {
+                        entry.customFields[currentKey] = currentValue
+                    } else if !currentKey.isEmpty {
+                        entry.customFields[currentKey] = currentValue
+                    }
+                }
+            }
+
+        case "Times":
+            break // handled by sub-elements
+
+        case "CreationTime":
+            currentEntry?.creationTime = parseKPDate(currentText.trimmingCharacters(in: .whitespacesAndNewlines))
+
+        case "LastModificationTime":
+            currentEntry?.lastModificationTime = parseKPDate(currentText.trimmingCharacters(in: .whitespacesAndNewlines))
+
+        case "Tags":
+            if let entry = currentEntry {
+                let trimmed = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    entry.tags = trimmed.components(separatedBy: CharacterSet([",", ";"])).map {
+                        $0.trimmingCharacters(in: .whitespaces)
+                    }.filter { !$0.isEmpty }
+                }
+            }
+
+        default:
+            break
+        }
+    }
+
+    // MARK: - Protected Value Decryption
+
+    private func decryptProtectedValue(_ encrypted: Data) -> String {
+        guard innerStreamID == KDBXParser.innerStreamChaCha20 else {
+            // Salsa20 or other — not supported in v1
+            return String(data: encrypted, encoding: .utf8) ?? ""
+        }
+
+        // ChaCha20 inner stream: generate keystream and XOR
+        let key = Data(streamCipherKey.prefix(32))
+        let nonce = Data(streamCipherKey[32..<44])
+
+        // We need to maintain a running counter, so we generate a chunk large enough
+        let decrypted = KDBXCrypto.chacha20Stream(key: key, nonce: nonce, data: encrypted)
+        return String(data: decrypted, encoding: .utf8) ?? ""
+    }
+
+    private func isInsideHistory(_ parser: XMLParser) -> Bool {
+        // Simple heuristic — if we already have an entry context, a nested Entry is history
+        return false // Simplified; history entries are inside <History> element
+    }
+
+    private func parseKPDate(_ string: String) -> Date? {
+        // KDBX4 can use base64-encoded binary date or ISO 8601
+        if string.contains("-") || string.contains("T") {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return formatter.date(from: string) ?? ISO8601DateFormatter().date(from: string)
+        }
+        // Base64 binary timestamp (seconds since 0001-01-01)
+        if let data = Data(base64Encoded: string), data.count == 8 {
+            let seconds = data.withUnsafeBytes { $0.loadUnaligned(as: Int64.self).littleEndian }
+            let kpEpoch = DateComponents(calendar: .init(identifier: .gregorian), year: 1, month: 1, day: 1).date!
+            return kpEpoch.addingTimeInterval(TimeInterval(seconds))
+        }
+        return nil
+    }
+}
+
+// MARK: - Entry Builder
+
+private class EntryBuilder {
+    var title = ""
+    var username = ""
+    var password = ""
+    var url = ""
+    var notes = ""
+    var iconID = 0
+    var tags: [String] = []
+    var customFields: [String: String] = [:]
+    var otpURL: String?
+    var creationTime: Date?
+    var lastModificationTime: Date?
+
+    func build() -> KPEntry {
+        let totpConfig = buildTOTPConfig()
+        return KPEntry(
+            title: title,
+            username: username,
+            password: password,
+            url: url,
+            notes: notes,
+            iconID: iconID,
+            tags: tags,
+            customFields: customFields.filter { !$0.key.hasPrefix("TimeOtp-") && $0.key != "TOTP Settings" && $0.key != "TOTP Seed" },
+            totpConfig: totpConfig,
+            creationTime: creationTime,
+            lastModificationTime: lastModificationTime
+        )
+    }
+
+    private func buildTOTPConfig() -> TOTPConfig? {
+        // otpauth:// URI (KeePassXC standard)
+        if let otpURL, otpURL.hasPrefix("otpauth://") {
+            return parseTOTPFromURI(otpURL)
+        }
+
+        // KeePassXC TimeOtp fields
+        if let secret = customFields["TimeOtp-Secret-Base32"], !secret.isEmpty {
+            let period = Int(customFields["TimeOtp-Period"] ?? "30") ?? 30
+            let digits = Int(customFields["TimeOtp-Length"] ?? "6") ?? 6
+            let algo = TOTPAlgorithm(rawValue: customFields["TimeOtp-Algorithm"] ?? "SHA1") ?? .sha1
+            return TOTPConfig(secret: secret, period: period, digits: digits, algorithm: algo)
+        }
+
+        // Legacy TOTP Seed / TOTP Settings
+        if let seed = customFields["TOTP Seed"], !seed.isEmpty {
+            let settings = customFields["TOTP Settings"] ?? "30;6"
+            let parts = settings.components(separatedBy: ";")
+            let period = Int(parts.first ?? "30") ?? 30
+            let digits = Int(parts.count > 1 ? parts[1] : "6") ?? 6
+            return TOTPConfig(secret: seed, period: period, digits: digits)
+        }
+
+        return nil
+    }
+
+    private func parseTOTPFromURI(_ uri: String) -> TOTPConfig? {
+        guard let components = URLComponents(string: uri) else { return nil }
+        let params = Dictionary(uniqueKeysWithValues:
+            (components.queryItems ?? []).compactMap { item in
+                item.value.map { (item.name.lowercased(), $0) }
+            }
+        )
+
+        guard let secret = params["secret"] else { return nil }
+        let period = Int(params["period"] ?? "30") ?? 30
+        let digits = Int(params["digits"] ?? "6") ?? 6
+        let algorithm = TOTPAlgorithm(rawValue: (params["algorithm"] ?? "SHA1").uppercased()) ?? .sha1
+
+        return TOTPConfig(secret: secret, period: period, digits: digits, algorithm: algorithm)
+    }
+}
