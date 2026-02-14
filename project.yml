@@ -92,5 +92,21 @@ targets:
       - target: KeeVault
     sources:
       - path: KeeVaultUITests
-    resources:
       - path: TestFixtures/test.kdbx
+        buildPhase: resources
+
+schemes:
+  KeeVault:
+    build:
+      targets:
+        KeeVault: all
+        KeeVaultUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - name: KeeVaultUITests
+          parallelizable: false
+          randomExecutionOrder: false

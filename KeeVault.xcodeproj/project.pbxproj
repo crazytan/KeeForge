@@ -51,6 +51,7 @@
 		997FA5C0DC53CE2731A37115 /* encoding.h in Sources */ = {isa = PBXBuildFile; fileRef = 4A74E616BDF70E76A1BF9C47 /* encoding.h */; settings = {COMPILER_FLAGS = "-DARGON2_NO_THREADS"; }; };
 		999192E753BEECE07E434465 /* argon2.c in Sources */ = {isa = PBXBuildFile; fileRef = 9DD45B45F9FA3134A2B46DA3 /* argon2.c */; settings = {COMPILER_FLAGS = "-DARGON2_NO_THREADS"; }; };
 		9D80E85BC5136F4DB90FA0FB /* TOTPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C024C6B1529C887FACFC32 /* TOTPViewModel.swift */; };
+		A36C9C21FC0D262F17448FC1 /* test.kdbx in Resources */ = {isa = PBXBuildFile; fileRef = 51AE62F0327AE140D741636B /* test.kdbx */; };
 		A418AE2AA3EE750952AF5C8D /* NavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4B55B0EA14F17F01BB82FE /* NavigationUITests.swift */; };
 		A5889A3B87720660E19D73A1 /* blake2-impl.h in Sources */ = {isa = PBXBuildFile; fileRef = CB8CA57BCC9BB3348C50B665 /* blake2-impl.h */; settings = {COMPILER_FLAGS = "-DARGON2_NO_THREADS"; }; };
 		A73E58906E6BD20D6840D27C /* thread.h in Sources */ = {isa = PBXBuildFile; fileRef = C452E5A3B956464EF630257C /* thread.h */; settings = {COMPILER_FLAGS = "-DARGON2_NO_THREADS"; }; };
@@ -119,6 +120,7 @@
 		4A74E616BDF70E76A1BF9C47 /* encoding.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = encoding.h; sourceTree = "<group>"; };
 		4AA1BC781576F6FCF822CF5F /* ClipboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardService.swift; sourceTree = "<group>"; };
 		4FD7989AF0273E164C427E14 /* thread.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = thread.c; sourceTree = "<group>"; };
+		51AE62F0327AE140D741636B /* test.kdbx */ = {isa = PBXFileReference; path = test.kdbx; sourceTree = "<group>"; };
 		520EE09EDA183240F2C4A150 /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		5FDAB0B2AA37625E26242E53 /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
 		658FA92FDF42D22946461B26 /* argon2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = argon2.h; sourceTree = "<group>"; };
@@ -221,6 +223,14 @@
 			path = AutoFillExtension;
 			sourceTree = "<group>";
 		};
+		8CBC91F5801178AC803EEBDC /* TestFixtures */ = {
+			isa = PBXGroup;
+			children = (
+				51AE62F0327AE140D741636B /* test.kdbx */,
+			);
+			path = TestFixtures;
+			sourceTree = "<group>";
+		};
 		A32A208F93C711849C1088B7 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -242,6 +252,7 @@
 				397037C85461299C2611E3C5 /* Models */,
 				A73FF28784C9F31E425687CD /* Resources */,
 				CC966CEB9E3635D5C6BD5E35 /* Services */,
+				8CBC91F5801178AC803EEBDC /* TestFixtures */,
 				CBF4AC9A588E2592756A2901 /* ViewModels */,
 				283C2B000DC172016C407319 /* Views */,
 				0DDE644E447B42CFDB9726BE /* Products */,
@@ -324,6 +335,7 @@
 			buildConfigurationList = 90FA865EE8F1C2741F01858F /* Build configuration list for PBXNativeTarget "KeeVaultUITests" */;
 			buildPhases = (
 				0481FCC930D944D5B7EA966A /* Sources */,
+				95BEF107B132089482AEEA08 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -422,6 +434,14 @@
 			files = (
 				1AE06B26374913022AF0B512 /* Assets.xcassets in Resources */,
 				314EE1BF6F838D5F59FF776B /* LaunchScreen.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		95BEF107B132089482AEEA08 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A36C9C21FC0D262F17448FC1 /* test.kdbx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
