@@ -1,77 +1,37 @@
 # KeeVault
 
-A free, native iOS KeePassXC-compatible password manager. Read-only in v1.
+Free, native iOS KeePassXC-compatible password manager. Version 1 is read-only.
 
-## Why
+## What It Is
 
-There's no great free KeePass client on iOS. Strongbox charges $50/year, KeePassium has a subscription too. KeeVault is free, open-source, and does the basics right: open your `.kdbx` file, browse entries, copy passwords, autofill with Face ID.
+- Opens and decrypts `.kdbx` (KDBX 4.x) databases
+- Browses groups and entries
+- Supports TOTP display/copy
+- Targets iOS 17+ with SwiftUI and Swift 6
+- Uses Apple frameworks plus bundled `libargon2` (no third-party runtime deps)
 
-## Tech Stack
-
-- **Language:** Swift 6 (strict concurrency)
-- **UI:** SwiftUI, iOS 17+
-- **Architecture:** MVVM
-- **Dependencies:** None (pure Apple frameworks + bundled libargon2)
-
-## Status
-
-| Component | Status |
-|-----------|--------|
-| KDBX 4.x parser | ✅ Done |
-| Crypto (AES/ChaCha20/Argon2) | ✅ Done |
-| TOTP generation | ✅ Done |
-| Data models (Entry/Group) | ✅ Done |
-| Xcode project | ❌ Not started |
-| SwiftUI views | ❌ Not started |
-| ViewModels | ❌ Not started |
-| Services (Keychain/Bio/Clipboard) | ❌ Not started |
-| AutoFill extension | ❌ Not started |
-| Face ID integration | ❌ Not started |
-
-## Building
+## Build
 
 1. Open `KeeVault.xcodeproj` in Xcode 16+
-2. Select a simulator or device (iOS 17+)
-3. Build & Run
+2. Select an iOS 17+ simulator or device
+3. Build and run
 
-## Project Structure
+## Basic Usage
 
-```
-KeeVault/
-├── KeeVault/
-│   ├── App/                    # App entry point
-│   │   └── KeeVaultApp.swift
-│   ├── Models/                 # Core logic (KDBX parsing, crypto, TOTP)
-│   │   ├── KDBXParser.swift    ✅
-│   │   ├── KDBXCrypto.swift    ✅
-│   │   ├── Entry.swift         ✅
-│   │   ├── Group.swift         ✅
-│   │   └── TOTPGenerator.swift ✅
-│   ├── Views/                  # SwiftUI views
-│   │   ├── UnlockView.swift
-│   │   ├── GroupListView.swift
-│   │   ├── EntryListView.swift
-│   │   ├── EntryDetailView.swift
-│   │   └── SearchView.swift
-│   ├── ViewModels/
-│   │   ├── DatabaseViewModel.swift
-│   │   └── TOTPViewModel.swift
-│   ├── Services/
-│   │   ├── KeychainService.swift
-│   │   ├── BiometricService.swift
-│   │   ├── ClipboardService.swift
-│   │   └── DocumentPickerService.swift
-│   ├── CArgon2Bridge/          # C bridging header for libargon2
-│   │   └── argon2_bridge.h     ✅
-│   ├── Resources/
-│   │   └── Assets.xcassets/
-│   └── Extensions/
-├── AutoFillExtension/          # Credential Provider extension
-├── Tests/
-├── README.md
-├── REQUIREMENTS.md
-└── CLAUDE.md
-```
+1. Pick a `.kdbx` file from Files/iCloud
+2. Enter master password to unlock
+3. Browse groups and entries
+4. Copy fields (username/password/TOTP), open URLs, and search entries
+
+## Current State
+
+- Core parser/crypto/models/TOTP in `KeeVault/Models/`: implemented
+- App UI, view models, services, and AutoFill extension: in progress
+
+## Docs
+
+- `AGENTS.md`: architecture + coding-agent guidance
+- `TODO.md`: roadmap and next implementation steps
 
 ## License
 
