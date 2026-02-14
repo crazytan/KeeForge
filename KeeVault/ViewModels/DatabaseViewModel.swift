@@ -112,17 +112,14 @@ final class DatabaseViewModel {
             let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
 
             let data = try readSecurityScoped(url: url)
-            // Re-derive password hash from stored composite key is not possible,
-            // so we need to store enough to re-parse. For now, we store the composite key
-            // and use a direct parse path that accepts composite key.
-            // Since KDBXParser.parse only takes a password string, we need to use password-based unlock.
-            // The biometric flow stores the composite key for future use with a modified parser.
-            // For v1, biometric re-unlock works by storing the password hash.
-            let _ = compositeKey // Verified biometric access works
 
-            // Note: Full biometric unlock requires KDBXParser to accept a pre-computed composite key.
-            // For now, biometric verification succeeds but we need the password for parsing.
-            state = .error("Please enter your password. Biometric verification succeeded.")
+            let root = try await Task.detached {
+                try KDBXParser.parse(data: data, compositeKey: compositeKey)
+            }.value
+
+            self.rootGroup = root
+            self.compositeKey = compositeKey
+            state = .unlocked
         } catch {
             state = .error(error.localizedDescription)
         }

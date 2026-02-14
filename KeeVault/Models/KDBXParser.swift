@@ -81,6 +81,11 @@ enum KDBXParser {
 
     /// Parse and decrypt a KDBX 4.x file, returning the root group
     static func parse(data: Data, password: String) throws -> KPGroup {
+        let compositeKey = KDBXCrypto.compositeKey(password: password)
+        return try parse(data: data, compositeKey: compositeKey)
+    }
+
+    static func parse(data: Data, compositeKey: Data) throws -> KPGroup {
         var reader = DataReader(data: data)
 
         // 1. Verify signatures
@@ -113,7 +118,6 @@ enum KDBXParser {
         }
 
         // 5. Derive keys
-        let compositeKey = KDBXCrypto.compositeKey(password: password)
         let transformedKey = try deriveKey(compositeKey: compositeKey, kdfParams: header.kdfParameters)
 
         // Master key = SHA256(masterSeed + transformedKey)
