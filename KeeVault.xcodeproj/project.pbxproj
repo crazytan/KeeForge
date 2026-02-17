@@ -8,13 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071857A0B486E482F58E96A0 /* KDBXParserTests.swift */; };
+		089FD935F8ED9AE87A519239 /* CredentialMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E484DDAC08825D592F42C971 /* CredentialMatcher.swift */; };
 		0B7D322BDCD334BF2F20CE5D /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDDC37E863EB341697FC0AC /* KeychainService.swift */; };
+		118B92B5F516A3C8F95B2A06 /* CredentialMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E484DDAC08825D592F42C971 /* CredentialMatcher.swift */; };
 		13EE88975D4DAB4A327D2791 /* KDBXCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9D9D013823B73C45F84BF6 /* KDBXCrypto.swift */; };
 		157D8E7898E8CC395544235D /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0232E599B749066A550CD867 /* GroupListView.swift */; };
 		15C9D9278F22C24F30EA8A23 /* core.h in Sources */ = {isa = PBXBuildFile; fileRef = AC48ED14027FBFD10C497878 /* core.h */; settings = {COMPILER_FLAGS = "-DARGON2_NO_THREADS"; }; };
 		19583614D1A2B6F4DF4E4E3B /* CredentialProviderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0D3EBAABD59A7BD9FEFB5B /* CredentialProviderViewController.swift */; };
 		1AE06B26374913022AF0B512 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87A9BBBD6B10534CBFC5D62C /* Assets.xcassets */; };
 		1CFF59E7E32F6CF40F47BA84 /* thread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FD7989AF0273E164C427E14 /* thread.c */; settings = {COMPILER_FLAGS = "-DARGON2_NO_THREADS"; }; };
+		2925BEF7334B1A39784CA5F1 /* CredentialMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */; };
 		2C7ED41E165C57037E5F6F06 /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDAB0B2AA37625E26242E53 /* Group.swift */; };
 		3122E83D6DCA799E9DF4F0AF /* NavigationConformances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDAC24E05E1785E79D0F478 /* NavigationConformances.swift */; };
 		314EE1BF6F838D5F59FF776B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72B36D86223AA2841F9F19D6 /* LaunchScreen.storyboard */; };
@@ -138,6 +141,7 @@
 		4FD7989AF0273E164C427E14 /* thread.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = thread.c; sourceTree = "<group>"; };
 		51AE62F0327AE140D741636B /* test.kdbx */ = {isa = PBXFileReference; path = test.kdbx; sourceTree = "<group>"; };
 		520EE09EDA183240F2C4A150 /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
+		58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialMatcherTests.swift; sourceTree = "<group>"; };
 		5FDAB0B2AA37625E26242E53 /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
 		658FA92FDF42D22946461B26 /* argon2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = argon2.h; sourceTree = "<group>"; };
 		72B36D86223AA2841F9F19D6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -169,6 +173,7 @@
 		C452E5A3B956464EF630257C /* thread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = "<group>"; };
 		C5851D3E9580E70714F51B41 /* KeeVaultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeeVaultApp.swift; sourceTree = "<group>"; };
 		CB8CA57BCC9BB3348C50B665 /* blake2-impl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "blake2-impl.h"; sourceTree = "<group>"; };
+		E484DDAC08825D592F42C971 /* CredentialMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialMatcher.swift; sourceTree = "<group>"; };
 		EA801B7F5A40A25CA95BC6B9 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricService.swift; sourceTree = "<group>"; };
 		EC9D9D013823B73C45F84BF6 /* KDBXCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDBXCrypto.swift; sourceTree = "<group>"; };
 		EF1680F80D263A4F12E1FD11 /* DatabaseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseViewModel.swift; sourceTree = "<group>"; };
@@ -248,6 +253,7 @@
 		8C63268F934714FD2F7C4FF8 /* KeeVaultTests */ = {
 			isa = PBXGroup;
 			children = (
+				58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */,
 				994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */,
 				071857A0B486E482F58E96A0 /* KDBXParserTests.swift */,
 				2CECAB218BA8547CF5053EEE /* ModelLogicTests.swift */,
@@ -341,6 +347,7 @@
 			children = (
 				EA801B7F5A40A25CA95BC6B9 /* BiometricService.swift */,
 				4AA1BC781576F6FCF822CF5F /* ClipboardService.swift */,
+				E484DDAC08825D592F42C971 /* CredentialMatcher.swift */,
 				857C0EBF8BB4D5443786B54C /* DocumentPickerService.swift */,
 				74875E522F92348C08057696 /* HapticService.swift */,
 				9FDDC37E863EB341697FC0AC /* KeychainService.swift */,
@@ -538,6 +545,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				37A167A5B11E79886AB768E3 /* BiometricService.swift in Sources */,
+				118B92B5F516A3C8F95B2A06 /* CredentialMatcher.swift in Sources */,
 				19583614D1A2B6F4DF4E4E3B /* CredentialProviderViewController.swift in Sources */,
 				BD0B5F9051C2C2A30561C0AC /* DocumentPickerService.swift in Sources */,
 				95E05966437433A8DB789E6B /* Entry.swift in Sources */,
@@ -567,6 +575,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2925BEF7334B1A39784CA5F1 /* CredentialMatcherTests.swift in Sources */,
 				64673414C1434500302E97E8 /* DatabaseViewModelTests.swift in Sources */,
 				07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */,
 				E334E6B9CF58BFF29EC50139 /* ModelLogicTests.swift in Sources */,
@@ -582,6 +591,7 @@
 			files = (
 				4BBBC764F17ADC3EF8525DA8 /* BiometricService.swift in Sources */,
 				B2E4536F8A4FB6AEAFBF1C0F /* ClipboardService.swift in Sources */,
+				089FD935F8ED9AE87A519239 /* CredentialMatcher.swift in Sources */,
 				D64C0F898BA4FD7440AEC398 /* DatabaseViewModel.swift in Sources */,
 				7D54BB5FDFD2C5A69370AC6F /* DocumentPickerService.swift in Sources */,
 				7844FEA590BAD4372335C5DB /* Entry.swift in Sources */,
