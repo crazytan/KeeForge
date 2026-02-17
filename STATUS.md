@@ -1,6 +1,6 @@
 # STATUS.md — KeeVault Project Status
 
-**Last updated:** 2026-02-15
+**Last updated:** 2026-02-16
 
 ## Current State
 
@@ -8,7 +8,7 @@
 
 | Suite | Status |
 |-------|--------|
-| Unit tests | 25/25 ✅ |
+| Unit tests | 43/43 ✅ |
 | UI tests (Simulator) | 5/5 ✅ |
 | UI tests (Device) | 5/5 ✅ (iPhone 17 Pro Max) |
 
@@ -35,6 +35,18 @@
 **Unit test expansion** (`1d29feb`):
 - Added 21 new unit tests covering ViewModels, Services, and Models
 - Coverage: DatabaseViewModel, TOTPViewModel, TOTPGenerator, SharedVaultStore, KPGroup/KPEntry utilities
+
+## Recent Changes (2026-02-16)
+
+**AutoFill credential matching tests** (`23280bd`) — extracted and tested:
+- Extracted `CredentialMatcher` enum from `CredentialProviderViewController` into `KeeVault/Services/CredentialMatcher.swift`
+- 3 public static methods: `matchedEntries(from:for:)`, `searchTerm(for:)`, `hostFromURLString(_:)`
+- Added to AutoFill extension sources in `project.yml`
+- Updated `CredentialProviderViewController` to call `CredentialMatcher.matchedEntries(...)` instead of private method
+- 18 new unit tests in `KeeVaultTests/CredentialMatcherTests.swift` covering:
+  - `hostFromURLString`: full URLs, bare domains, subdomains, ports, HTTP, empty strings
+  - `searchTerm`: domain-type and URL-type identifiers
+  - `matchedEntries`: exact domain, subdomain, URL-type, no matches, multiple matches, empty URL/title, case insensitivity, empty identifiers
 
 ## Next Steps
 

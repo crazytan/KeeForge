@@ -24,12 +24,18 @@ Free, native iOS KeePassXC-compatible password manager. Version 1 is read-only.
 3. Browse groups and entries
 4. Copy fields (username/password/TOTP), open URLs, and search entries
 
+## AutoFill Extension
+
+KeeVault includes an AutoFill Credential Provider extension for system-wide password autofill. The extension uses `CredentialMatcher` — a shared matching engine in `KeeVault/Services/` — to find relevant credentials by comparing service identifiers (domains/URLs) against entry URLs and titles. Matching supports subdomains, URL-type identifiers, and case-insensitive comparison.
+
 ## Test Status
 
-| Suite | Status |
-|-------|--------|
-| Unit tests | 25/25 ✅ |
-| UI tests | 5/5 ✅ |
+| Suite | Count | Status |
+|-------|-------|--------|
+| Unit tests | 43 | ✅ |
+| UI tests | 5 | ✅ |
+
+Includes 18 dedicated `CredentialMatcher` tests covering host extraction, search term generation, and entry matching (exact domain, subdomain, URL-type, case insensitivity, edge cases).
 
 ## Project Structure
 
@@ -37,13 +43,13 @@ Free, native iOS KeePassXC-compatible password manager. Version 1 is read-only.
 KeeVault/
 ├── App/              # App entry point
 ├── Models/           # KDBX parser, crypto, data models
-├── Services/         # Keychain, Biometric, Clipboard, DocumentPicker
+├── Services/         # Keychain, Biometric, Clipboard, DocumentPicker, CredentialMatcher
 ├── ViewModels/       # DatabaseViewModel, TOTPViewModel
 ├── Views/            # SwiftUI views
 └── argon2/           # Bundled libargon2 C sources
 
-KeeVaultAutoFill/     # AutoFill extension
-KeeVaultTests/        # Unit tests
+AutoFillExtension/    # AutoFill Credential Provider extension
+KeeVaultTests/        # Unit tests (including CredentialMatcherTests)
 KeeVaultUITests/      # UI tests
 TestFixtures/         # Test .kdbx files
 ```

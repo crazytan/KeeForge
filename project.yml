@@ -76,6 +76,7 @@ targets:
       - path: KeeVault/Services/DocumentPickerService.swift
       - path: KeeVault/Services/KeychainService.swift
       - path: KeeVault/Services/SharedVaultStore.swift
+      - path: KeeVault/Services/CredentialMatcher.swift
       - path: KeeVault/CArgon2Bridge/argon2_bridge.h
         buildPhase: headers
       - path: KeeVault/CArgon2Bridge/argon2

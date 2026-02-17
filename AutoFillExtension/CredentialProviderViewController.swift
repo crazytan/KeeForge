@@ -130,7 +130,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     }
 
     private func presentMatchesOrFinish() {
-        let matches = matchedEntries(from: parsedEntries, for: serviceIdentifiers)
+        let matches = CredentialMatcher.matchedEntries(from: parsedEntries, for: serviceIdentifiers)
 
         if matches.isEmpty {
             cancelRequest(code: .credentialIdentityNotFound)
@@ -163,45 +163,6 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         })
 
         present(alert, animated: true)
-    }
-
-    private func matchedEntries(from entries: [KPEntry], for identifiers: [ASCredentialServiceIdentifier]) -> [KPEntry] {
-        guard !identifiers.isEmpty else { return entries }
-
-        let searchTerms = Set(identifiers.compactMap(Self.searchTerm(for:)).map { $0.lowercased() })
-
-        return entries.filter { entry in
-            let entryHost = Self.hostFromURLString(entry.url)?.lowercased()
-            let entryURL = entry.url.lowercased()
-            let entryTitle = entry.title.lowercased()
-
-            return searchTerms.contains { term in
-                if let entryHost, entryHost == term || entryHost.hasSuffix(".\(term)") {
-                    return true
-                }
-
-                return entryURL.contains(term) || entryTitle.contains(term)
-            }
-        }
-    }
-
-    private static func searchTerm(for identifier: ASCredentialServiceIdentifier) -> String? {
-        switch identifier.type {
-        case .domain:
-            return identifier.identifier
-        case .URL:
-            return hostFromURLString(identifier.identifier) ?? identifier.identifier
-        @unknown default:
-            return identifier.identifier
-        }
-    }
-
-    private static func hostFromURLString(_ value: String) -> String? {
-        if let host = URL(string: value)?.host {
-            return host
-        }
-
-        return URL(string: "https://\(value)")?.host
     }
 
     private func completeRequest(with entry: KPEntry) {
