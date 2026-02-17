@@ -32,3 +32,4 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 *.xcuserstate
+TestResults/
