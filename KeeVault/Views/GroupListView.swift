@@ -3,6 +3,7 @@ import SwiftUI
 struct GroupListView: View {
     let group: KPGroup
     @Bindable var viewModel: DatabaseViewModel
+    @State private var showSettings = false
 
     var body: some View {
         Group {
@@ -42,17 +43,29 @@ struct GroupListView: View {
                 .navigationBarTitleDisplayMode(.large)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            Picker("Sort By", selection: $viewModel.sortOrder) {
-                                ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
-                                    Text(order.rawValue).tag(order)
+                        HStack(spacing: 12) {
+                            Menu {
+                                Picker("Sort By", selection: $viewModel.sortOrder) {
+                                    ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
+                                        Text(order.rawValue).tag(order)
+                                    }
                                 }
+                            } label: {
+                                Image(systemName: "arrow.up.arrow.down")
                             }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
+                            .accessibilityIdentifier("sort.menu")
+
+                            Button {
+                                showSettings = true
+                            } label: {
+                                Image(systemName: "gearshape")
+                            }
+                            .accessibilityIdentifier("settings.button")
                         }
-                        .accessibilityIdentifier("sort.menu")
                     }
+                }
+                .sheet(isPresented: $showSettings) {
+                    SettingsView(viewModel: viewModel)
                 }
             } else {
                 SearchView(viewModel: viewModel)

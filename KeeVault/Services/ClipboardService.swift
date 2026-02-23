@@ -1,12 +1,14 @@
 import UIKit
 
 enum ClipboardService {
-    private static let clearDelay: TimeInterval = 30
-
     static func copy(_ string: String) {
-        UIPasteboard.general.setItems(
-            [[UIPasteboard.typeAutomatic: string]],
-            options: [.expirationDate: Date().addingTimeInterval(clearDelay)]
-        )
+        if let seconds = SettingsService.clipboardTimeout.seconds {
+            UIPasteboard.general.setItems(
+                [[UIPasteboard.typeAutomatic: string]],
+                options: [.expirationDate: Date().addingTimeInterval(seconds)]
+            )
+        } else {
+            UIPasteboard.general.string = string
+        }
     }
 }
