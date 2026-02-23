@@ -8,7 +8,7 @@
 - [ ] AutoFill subtitle missing in iOS Settings
 
 ### Features
-- [ ] Settings page (clipboard timeout, auto-lock timeout, auto Face ID, sort preference)
+- [x] Settings page (clipboard timeout, auto-lock timeout, auto Face ID, sort preference)
 - [ ] Auto-lock after inactivity timeout (foreground idle timer; background lock already works)
 - [ ] Auto Face ID unlock on app open (opt-in; depends on keychain bug fix)
 - [ ] Favicon support (download from Google favicon service; opt-in since it adds network calls)
@@ -23,6 +23,7 @@
 
 ## Unreleased
 
+- Settings page with auto-lock timeout, clipboard timeout, sort order, and about section
 - Fixed keychain account key to use filename instead of full path (bookmark-resolved paths change between launches)
 - List sorting by title, created date, or modified date (persisted to UserDefaults)
 - Multiple URLs per entry via KP2A_URL custom fields (display + AutoFill matching)

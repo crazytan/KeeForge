@@ -32,6 +32,7 @@
 		4F827D1E744FFF7C979DCB0C /* KeeVaultUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC215325715C988E238D34 /* KeeVaultUITestCase.swift */; };
 		54328D9A250B18ED2317E2FB /* AutoLockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A3EB41899AAE77C1519986 /* AutoLockTests.swift */; };
 		64673414C1434500302E97E8 /* DatabaseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */; };
+		6953D2616ED330BD76E10ACD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC6DC511D21A4B536803596 /* SettingsView.swift */; };
 		6BB187D584A430CA757E5841 /* TOTPGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D53142E0E400EAFDFC0DB8 /* TOTPGenerator.swift */; };
 		6FBAFC562307C8B167E55950 /* KeeVaultApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5851D3E9580E70714F51B41 /* KeeVaultApp.swift */; };
 		705124D91DF00179DAC44510 /* EntryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A63F67A487C7503A1647768 /* EntryDetailView.swift */; };
@@ -48,6 +49,7 @@
 		A36C9C21FC0D262F17448FC1 /* test.kdbx in Resources */ = {isa = PBXBuildFile; fileRef = 51AE62F0327AE140D741636B /* test.kdbx */; };
 		A418AE2AA3EE750952AF5C8D /* NavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D4B55B0EA14F17F01BB82FE /* NavigationUITests.swift */; };
 		A773061608F431A27D942FE9 /* SharedVaultStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 765A581F2449D279DC9F00F8 /* SharedVaultStoreTests.swift */; };
+		A976E0582D032B7830436140 /* SettingsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91D402DC72928A53EF11B647 /* SettingsServiceTests.swift */; };
 		AA80F4C50FE63B48FB700436 /* ScreenProtectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F24A68304E05C5E4CCF32D33 /* ScreenProtectionService.swift */; };
 		AD43A5E642D77D3ED49677A3 /* KDBXParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04630AC02950D75B272D5927 /* KDBXParser.swift */; };
 		B2E4536F8A4FB6AEAFBF1C0F /* ClipboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA1BC781576F6FCF822CF5F /* ClipboardService.swift */; };
@@ -56,6 +58,7 @@
 		BD0B5F9051C2C2A30561C0AC /* DocumentPickerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857C0EBF8BB4D5443786B54C /* DocumentPickerService.swift */; };
 		C060B8AF23B7362C2D7A4B1E /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520EE09EDA183240F2C4A150 /* EntryListView.swift */; };
 		C1E95CA4A0681735A4B9E962 /* TOTPViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E82D92CFD9B903490902A7 /* TOTPViewModelTests.swift */; };
+		CAC0DEC7F65A41278FAFC80F /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E4DAEBA0358D91AC6EEA84 /* SettingsService.swift */; };
 		CF81B0220CC557748D33862D /* AutoFillExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B89BC0DD2296EA1CDD831E3C /* AutoFillExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D64C0F898BA4FD7440AEC398 /* DatabaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF1680F80D263A4F12E1FD11 /* DatabaseViewModel.swift */; };
 		DFE4172CD97B51357093526D /* KDBXParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04630AC02950D75B272D5927 /* KDBXParser.swift */; };
@@ -110,6 +113,8 @@
 		1F0D3EBAABD59A7BD9FEFB5B /* CredentialProviderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialProviderViewController.swift; sourceTree = "<group>"; };
 		23A3EB41899AAE77C1519986 /* AutoLockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoLockTests.swift; sourceTree = "<group>"; };
 		2CECAB218BA8547CF5053EEE /* ModelLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLogicTests.swift; sourceTree = "<group>"; };
+		2DC6DC511D21A4B536803596 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		32E4DAEBA0358D91AC6EEA84 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		33D8978A1402A88691AF3BC7 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		3EDAC24E05E1785E79D0F478 /* NavigationConformances.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationConformances.swift; sourceTree = "<group>"; };
 		4A63F67A487C7503A1647768 /* EntryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryDetailView.swift; sourceTree = "<group>"; };
@@ -129,6 +134,7 @@
 		87732690E19B56E5EFC4AA4F /* TOTPGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGeneratorTests.swift; sourceTree = "<group>"; };
 		87A9BBBD6B10534CBFC5D62C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		89FE935F12B1213BF2AA4887 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		91D402DC72928A53EF11B647 /* SettingsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsServiceTests.swift; sourceTree = "<group>"; };
 		955B1BDEF32074A97D218B94 /* KeeVaultTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KeeVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98D53142E0E400EAFDFC0DB8 /* TOTPGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGenerator.swift; sourceTree = "<group>"; };
 		994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseViewModelTests.swift; sourceTree = "<group>"; };
@@ -199,6 +205,7 @@
 				520EE09EDA183240F2C4A150 /* EntryListView.swift */,
 				0232E599B749066A550CD867 /* GroupListView.swift */,
 				B339F71610822D7A6BE8EA47 /* SearchView.swift */,
+				2DC6DC511D21A4B536803596 /* SettingsView.swift */,
 				9BF81D6E9F454E1A0E39F806 /* UnlockView.swift */,
 			);
 			name = Views;
@@ -236,6 +243,7 @@
 				994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */,
 				071857A0B486E482F58E96A0 /* KDBXParserTests.swift */,
 				2CECAB218BA8547CF5053EEE /* ModelLogicTests.swift */,
+				91D402DC72928A53EF11B647 /* SettingsServiceTests.swift */,
 				765A581F2449D279DC9F00F8 /* SharedVaultStoreTests.swift */,
 				597413A8C23F80083D2BCFE8 /* SortOrderTests.swift */,
 				87732690E19B56E5EFC4AA4F /* TOTPGeneratorTests.swift */,
@@ -309,6 +317,7 @@
 				74875E522F92348C08057696 /* HapticService.swift */,
 				9FDDC37E863EB341697FC0AC /* KeychainService.swift */,
 				F24A68304E05C5E4CCF32D33 /* ScreenProtectionService.swift */,
+				32E4DAEBA0358D91AC6EEA84 /* SettingsService.swift */,
 				7D1CB28C4D8F04F4885EA61E /* SharedVaultStore.swift */,
 			);
 			name = Services;
@@ -533,6 +542,7 @@
 				64673414C1434500302E97E8 /* DatabaseViewModelTests.swift in Sources */,
 				07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */,
 				E334E6B9CF58BFF29EC50139 /* ModelLogicTests.swift in Sources */,
+				A976E0582D032B7830436140 /* SettingsServiceTests.swift in Sources */,
 				A773061608F431A27D942FE9 /* SharedVaultStoreTests.swift in Sources */,
 				453F1ABC8CD8692A1BD76E85 /* SortOrderTests.swift in Sources */,
 				3D9716BB3BF72310A4046471 /* TOTPGeneratorTests.swift in Sources */,
@@ -562,6 +572,8 @@
 				3122E83D6DCA799E9DF4F0AF /* NavigationConformances.swift in Sources */,
 				AA80F4C50FE63B48FB700436 /* ScreenProtectionService.swift in Sources */,
 				915040E9F69EA94BECBED136 /* SearchView.swift in Sources */,
+				CAC0DEC7F65A41278FAFC80F /* SettingsService.swift in Sources */,
+				6953D2616ED330BD76E10ACD /* SettingsView.swift in Sources */,
 				830A764AB9F50D4F24C12E92 /* SharedVaultStore.swift in Sources */,
 				6BB187D584A430CA757E5841 /* TOTPGenerator.swift in Sources */,
 				9D80E85BC5136F4DB90FA0FB /* TOTPViewModel.swift in Sources */,
