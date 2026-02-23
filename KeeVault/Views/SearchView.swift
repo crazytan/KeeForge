@@ -29,11 +29,6 @@ struct SearchView: View {
         }
         .navigationTitle("Search")
         .navigationBarTitleDisplayMode(.large)
-        .searchable(
-            text: $viewModel.searchText,
-            placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "Search entries"
-        )
         .overlay(alignment: .bottomTrailing) {
             if isUITesting {
                 Text("results:\(viewModel.searchResults.count)")

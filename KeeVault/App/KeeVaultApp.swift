@@ -78,8 +78,8 @@ struct DatabaseNavigationView: View {
                 }
             }
         }
-        .onChange(of: viewModel.searchText) { _, newValue in
-            if !newValue.isEmpty && !viewModel.navigationPath.isEmpty {
+        .onChange(of: viewModel.searchText) { oldValue, newValue in
+            if oldValue.isEmpty && !newValue.isEmpty && !viewModel.navigationPath.isEmpty {
                 viewModel.navigationPath = NavigationPath()
             }
         }
