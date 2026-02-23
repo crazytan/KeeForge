@@ -95,6 +95,7 @@ struct FieldRow: View {
 struct PasswordFieldRow: View {
     let password: String
     @State private var revealed = false
+    @State private var authenticating = false
 
     var body: some View {
         Section("Password") {
@@ -112,14 +113,39 @@ struct PasswordFieldRow: View {
                 }
                 Spacer()
                 Button {
-                    HapticService.tap()
-                    revealed.toggle()
+                    if revealed {
+                        HapticService.tap()
+                        revealed = false
+                    } else {
+                        authenticateAndReveal()
+                    }
                 } label: {
                     Image(systemName: revealed ? "eye.slash.fill" : "eye.fill")
                 }
+                .disabled(authenticating)
                 .accessibilityIdentifier("entry.password.reveal")
-                CopyButton(text: password, accessibilityID: "entry.copy.password")
+                CopyButton(text: password, requireAuth: true, accessibilityID: "entry.copy.password")
             }
+        }
+    }
+
+    private func authenticateAndReveal() {
+        guard !authenticating else { return }
+        if BiometricService.isAvailable {
+            authenticating = true
+            Task {
+                do {
+                    _ = try await BiometricService.authenticate(reason: "View password")
+                    HapticService.success()
+                    revealed = true
+                } catch {
+                    HapticService.tap()
+                }
+                authenticating = false
+            }
+        } else {
+            HapticService.tap()
+            revealed = true
         }
     }
 }
@@ -155,17 +181,23 @@ struct URLFieldRow: View {
 
 struct CopyButton: View {
     let text: String
+    var requireAuth: Bool = false
     let accessibilityID: String
     @State private var copied = false
 
     var body: some View {
         Button {
-            ClipboardService.copy(text)
-            copied = true
-            HapticService.success()
-            Task {
-                try? await Task.sleep(for: .seconds(1.5))
-                copied = false
+            if requireAuth && BiometricService.isAvailable {
+                Task {
+                    do {
+                        _ = try await BiometricService.authenticate(reason: "Copy password")
+                        performCopy()
+                    } catch {
+                        HapticService.tap()
+                    }
+                }
+            } else {
+                performCopy()
             }
         } label: {
             Image(systemName: copied ? "checkmark" : "doc.on.doc")
@@ -173,6 +205,16 @@ struct CopyButton: View {
         }
         .buttonStyle(.borderless)
         .accessibilityIdentifier(accessibilityID)
+    }
+
+    private func performCopy() {
+        ClipboardService.copy(text)
+        copied = true
+        HapticService.success()
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            copied = false
+        }
     }
 }
 
