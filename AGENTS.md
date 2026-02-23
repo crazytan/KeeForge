@@ -14,10 +14,9 @@ Important context for AI coding agents working on KeeVault.
 Core logic in `KeeVault/Models/` is implemented and should not be refactored unless fixing a real bug:
 
 - `KDBXParser.swift` (KDBX 4.x parsing/decryption/integrity/XML)
-- `KDBXCrypto.swift` (AES, ChaCha20, Argon2 bridge, HMAC, gzip)
+- `KDBXCrypto.swift` (AES, ChaCha20, HMAC, gzip — Argon2 via Argon2Swift SPM)
 - `Entry.swift` and `Group.swift` models
 - `TOTPGenerator.swift` (RFC 6238)
-- `CArgon2Bridge/argon2_bridge.h`
 
 ## Architecture & Conventions
 

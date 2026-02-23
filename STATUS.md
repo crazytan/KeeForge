@@ -15,6 +15,15 @@
 - **Privacy Policy:** https://gist.github.com/crazytan/afe07aecf77d2aea2664b4af79d70e0d#file-privacy-policy-md
 - **Support:** https://gist.github.com/crazytan/afe07aecf77d2aea2664b4af79d70e0d#file-index-md
 
+## v1.1 Progress (2026-02-22)
+- ✅ Fixed inner stream decryption — passwords now display correctly
+- ✅ Fixed TOTP parsing from otp:// custom property
+- ✅ Replaced vendored argon2 C code with Argon2Swift SPM package
+- ⬜ Search smoothness
+- ⬜ AutoFill from Safari
+- ⬜ AutoFill subtitle in iOS Settings
+- ⬜ Fix Xcode warnings (concurrency, deprecations)
+
 ## Next Steps
-- Wait for App Store review (~24-48h)
+- v1.1 bug fixes in progress
 - v2 roadmap: editing, sync, attachments, iPad support
