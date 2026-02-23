@@ -522,6 +522,8 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
     private var currentGroupSubgroups: [[KPGroup]] = []
     private var groupNames: [String] = []
     private var groupIconIDs: [Int] = []
+    private var groupCreationTimes: [Date?] = []
+    private var groupLastModificationTimes: [Date?] = []
 
     init(data: Data, innerStreamKey: Data, innerStreamID: UInt32) {
         self.data = data
@@ -553,6 +555,8 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
         case "Group":
             groupNames.append("")
             groupIconIDs.append(48)
+            groupCreationTimes.append(nil)
+            groupLastModificationTimes.append(nil)
             currentGroupEntries.append([])
             currentGroupSubgroups.append([])
 
@@ -592,10 +596,12 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
         case "Group":
             let name = groupNames.removeLast()
             let iconID = groupIconIDs.removeLast()
+            let creationTime = groupCreationTimes.removeLast()
+            let lastModificationTime = groupLastModificationTimes.removeLast()
             let entries = currentGroupEntries.removeLast()
             let subgroups = currentGroupSubgroups.removeLast()
 
-            let group = KPGroup(name: name, iconID: iconID, entries: entries, groups: subgroups)
+            let group = KPGroup(name: name, iconID: iconID, entries: entries, groups: subgroups, creationTime: creationTime, lastModificationTime: lastModificationTime)
 
             if currentGroupSubgroups.isEmpty {
                 rootGroups.append(group)
@@ -668,10 +674,20 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
             break // handled by sub-elements
 
         case "CreationTime":
-            currentEntry?.creationTime = parseKPDate(currentText.trimmingCharacters(in: .whitespacesAndNewlines))
+            let date = parseKPDate(currentText.trimmingCharacters(in: .whitespacesAndNewlines))
+            if currentEntry != nil {
+                currentEntry?.creationTime = date
+            } else if !groupCreationTimes.isEmpty {
+                groupCreationTimes[groupCreationTimes.count - 1] = date
+            }
 
         case "LastModificationTime":
-            currentEntry?.lastModificationTime = parseKPDate(currentText.trimmingCharacters(in: .whitespacesAndNewlines))
+            let date = parseKPDate(currentText.trimmingCharacters(in: .whitespacesAndNewlines))
+            if currentEntry != nil {
+                currentEntry?.lastModificationTime = date
+            } else if !groupLastModificationTimes.isEmpty {
+                groupLastModificationTimes[groupLastModificationTimes.count - 1] = date
+            }
 
         case "Tags":
             if let entry = currentEntry {

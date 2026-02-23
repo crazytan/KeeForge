@@ -8,6 +8,8 @@ final class KPGroup: Identifiable, Sendable {
     let entries: [KPEntry]
     let groups: [KPGroup]
     let isExpanded: Bool
+    let creationTime: Date?
+    let lastModificationTime: Date?
 
     init(
         id: UUID = UUID(),
@@ -15,7 +17,9 @@ final class KPGroup: Identifiable, Sendable {
         iconID: Int = 48,
         entries: [KPEntry] = [],
         groups: [KPGroup] = [],
-        isExpanded: Bool = true
+        isExpanded: Bool = true,
+        creationTime: Date? = nil,
+        lastModificationTime: Date? = nil
     ) {
         self.id = id
         self.name = name
@@ -23,6 +27,8 @@ final class KPGroup: Identifiable, Sendable {
         self.entries = entries
         self.groups = groups
         self.isExpanded = isExpanded
+        self.creationTime = creationTime
+        self.lastModificationTime = lastModificationTime
     }
 
     /// Recursively find all entries in this group and subgroups

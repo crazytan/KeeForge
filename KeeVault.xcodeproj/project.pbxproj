@@ -25,6 +25,7 @@
 		3D9716BB3BF72310A4046471 /* TOTPGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87732690E19B56E5EFC4AA4F /* TOTPGeneratorTests.swift */; };
 		433DCCF5BB49DC7EA348D9F6 /* SharedVaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1CB28C4D8F04F4885EA61E /* SharedVaultStore.swift */; };
 		439D340BC0576CDC0A5724DA /* EntryDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA62AF00A42BCEE8691D62C /* EntryDetailUITests.swift */; };
+		453F1ABC8CD8692A1BD76E85 /* SortOrderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597413A8C23F80083D2BCFE8 /* SortOrderTests.swift */; };
 		49B3018A2B3EF12E93275D42 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74875E522F92348C08057696 /* HapticService.swift */; };
 		4BBBC764F17ADC3EF8525DA8 /* BiometricService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA801B7F5A40A25CA95BC6B9 /* BiometricService.swift */; };
 		4BE5E85653CA857FEF6DB144 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65F32F879F0C5EC8B81B446 /* SearchUITests.swift */; };
@@ -116,6 +117,7 @@
 		51AE62F0327AE140D741636B /* test.kdbx */ = {isa = PBXFileReference; path = test.kdbx; sourceTree = "<group>"; };
 		520EE09EDA183240F2C4A150 /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialMatcherTests.swift; sourceTree = "<group>"; };
+		597413A8C23F80083D2BCFE8 /* SortOrderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SortOrderTests.swift; sourceTree = "<group>"; };
 		5FDAB0B2AA37625E26242E53 /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
 		72B36D86223AA2841F9F19D6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		74875E522F92348C08057696 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				071857A0B486E482F58E96A0 /* KDBXParserTests.swift */,
 				2CECAB218BA8547CF5053EEE /* ModelLogicTests.swift */,
 				765A581F2449D279DC9F00F8 /* SharedVaultStoreTests.swift */,
+				597413A8C23F80083D2BCFE8 /* SortOrderTests.swift */,
 				87732690E19B56E5EFC4AA4F /* TOTPGeneratorTests.swift */,
 				F1E82D92CFD9B903490902A7 /* TOTPViewModelTests.swift */,
 			);
@@ -531,6 +534,7 @@
 				07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */,
 				E334E6B9CF58BFF29EC50139 /* ModelLogicTests.swift in Sources */,
 				A773061608F431A27D942FE9 /* SharedVaultStoreTests.swift in Sources */,
+				453F1ABC8CD8692A1BD76E85 /* SortOrderTests.swift in Sources */,
 				3D9716BB3BF72310A4046471 /* TOTPGeneratorTests.swift in Sources */,
 				C1E95CA4A0681735A4B9E962 /* TOTPViewModelTests.swift in Sources */,
 			);
