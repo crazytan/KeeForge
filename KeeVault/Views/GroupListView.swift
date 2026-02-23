@@ -10,7 +10,7 @@ struct GroupListView: View {
                 List {
                     if !group.groups.isEmpty {
                         Section("Groups") {
-                            ForEach(group.groups) { subgroup in
+                            ForEach(viewModel.sortedGroups(group.groups)) { subgroup in
                                 NavigationLink(value: subgroup) {
                                     GroupRow(group: subgroup)
                                 }
@@ -21,7 +21,7 @@ struct GroupListView: View {
 
                     if !group.entries.isEmpty {
                         Section("Entries") {
-                            ForEach(group.entries) { entry in
+                            ForEach(viewModel.sortedEntries(group.entries)) { entry in
                                 NavigationLink(value: entry) {
                                     EntryRow(entry: entry)
                                 }
@@ -40,6 +40,20 @@ struct GroupListView: View {
                 }
                 .navigationTitle(group.name)
                 .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Picker("Sort By", selection: $viewModel.sortOrder) {
+                                ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
+                                    Text(order.rawValue).tag(order)
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down")
+                        }
+                        .accessibilityIdentifier("sort.menu")
+                    }
+                }
             } else {
                 SearchView(viewModel: viewModel)
             }

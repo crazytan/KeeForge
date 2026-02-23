@@ -18,14 +18,23 @@ final class DatabaseViewModel {
         case error(String)
     }
 
+    enum SortOrder: String, CaseIterable, Sendable {
+        case title = "Title"
+        case createdDate = "Date Created"
+        case modifiedDate = "Date Modified"
+    }
+
     private(set) var state: State = .locked
     private(set) var rootGroup: KPGroup?
     var searchText = ""
     var isSearchActive = false
     var navigationPath = NavigationPath()
+    var sortOrder: SortOrder {
+        didSet { Self.saveSortOrder(sortOrder) }
+    }
 
     private var databaseURL: URL?
-    private(set) var compositeKey: Data?
+    private var compositeKey: Data?
     private let isUITesting: Bool
 
     var hasSavedFile: Bool {
@@ -81,6 +90,7 @@ final class DatabaseViewModel {
     init() {
         let launchArgs = ProcessInfo.processInfo.arguments
         isUITesting = launchArgs.contains(Self.uiTestingLaunchArg)
+        sortOrder = Self.loadSortOrder()
 
         if isUITesting {
             Self.diagnostic("init: running in UI test mode")
@@ -228,6 +238,39 @@ final class DatabaseViewModel {
             diagnostic("uiTestDatabaseURL: failed writing temp DB '\(error.localizedDescription)'")
             return nil
         }
+    }
+
+    func sortedGroups(_ groups: [KPGroup]) -> [KPGroup] {
+        switch sortOrder {
+        case .title:
+            return groups.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .createdDate:
+            return groups.sorted { ($0.creationTime ?? .distantPast) < ($1.creationTime ?? .distantPast) }
+        case .modifiedDate:
+            return groups.sorted { ($0.lastModificationTime ?? .distantPast) > ($1.lastModificationTime ?? .distantPast) }
+        }
+    }
+
+    func sortedEntries(_ entries: [KPEntry]) -> [KPEntry] {
+        switch sortOrder {
+        case .title:
+            return entries.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .createdDate:
+            return entries.sorted { ($0.creationTime ?? .distantPast) < ($1.creationTime ?? .distantPast) }
+        case .modifiedDate:
+            return entries.sorted { ($0.lastModificationTime ?? .distantPast) > ($1.lastModificationTime ?? .distantPast) }
+        }
+    }
+
+    private static let sortOrderKey = "KeeVault.sortOrder"
+
+    private static func loadSortOrder() -> SortOrder {
+        guard let raw = UserDefaults.standard.string(forKey: sortOrderKey) else { return .title }
+        return SortOrder(rawValue: raw) ?? .title
+    }
+
+    private static func saveSortOrder(_ order: SortOrder) {
+        UserDefaults.standard.set(order.rawValue, forKey: sortOrderKey)
     }
 
     private static func diagnostic(_ message: String) {
