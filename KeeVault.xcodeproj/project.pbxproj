@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		061D9633EA17E3209A3B1B44 /* FaviconService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04552A760B2EE2E9C50E65FA /* FaviconService.swift */; };
 		07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071857A0B486E482F58E96A0 /* KDBXParserTests.swift */; };
 		089FD935F8ED9AE87A519239 /* CredentialMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E484DDAC08825D592F42C971 /* CredentialMatcher.swift */; };
 		0B7D322BDCD334BF2F20CE5D /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDDC37E863EB341697FC0AC /* KeychainService.swift */; };
@@ -18,9 +19,11 @@
 		19583614D1A2B6F4DF4E4E3B /* CredentialProviderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0D3EBAABD59A7BD9FEFB5B /* CredentialProviderViewController.swift */; };
 		1AE06B26374913022AF0B512 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87A9BBBD6B10534CBFC5D62C /* Assets.xcassets */; };
 		2925BEF7334B1A39784CA5F1 /* CredentialMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */; };
+		29AFD209A654EAEB36105DA4 /* FaviconServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A004F76E3E2182236B90A5 /* FaviconServiceTests.swift */; };
 		2C7ED41E165C57037E5F6F06 /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDAB0B2AA37625E26242E53 /* Group.swift */; };
 		3122E83D6DCA799E9DF4F0AF /* NavigationConformances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDAC24E05E1785E79D0F478 /* NavigationConformances.swift */; };
 		314EE1BF6F838D5F59FF776B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72B36D86223AA2841F9F19D6 /* LaunchScreen.storyboard */; };
+		34A00CC1BD87A0D2AA12D0CE /* FaviconService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04552A760B2EE2E9C50E65FA /* FaviconService.swift */; };
 		3638BD8048634C9D9DF10FCF /* KDBXCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9D9D013823B73C45F84BF6 /* KDBXCrypto.swift */; };
 		37A167A5B11E79886AB768E3 /* BiometricService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA801B7F5A40A25CA95BC6B9 /* BiometricService.swift */; };
 		3D9716BB3BF72310A4046471 /* TOTPGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87732690E19B56E5EFC4AA4F /* TOTPGeneratorTests.swift */; };
@@ -37,6 +40,7 @@
 		6BB187D584A430CA757E5841 /* TOTPGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D53142E0E400EAFDFC0DB8 /* TOTPGenerator.swift */; };
 		6FBAFC562307C8B167E55950 /* KeeVaultApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5851D3E9580E70714F51B41 /* KeeVaultApp.swift */; };
 		705124D91DF00179DAC44510 /* EntryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A63F67A487C7503A1647768 /* EntryDetailView.swift */; };
+		72736789461296CF636803D0 /* FaviconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCE7AF5A1B5681DAA51EA682 /* FaviconView.swift */; };
 		7844FEA590BAD4372335C5DB /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FE935F12B1213BF2AA4887 /* Entry.swift */; };
 		7BC70E4F773B35E41B4358EA /* UnlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF81D6E9F454E1A0E39F806 /* UnlockView.swift */; };
 		7D54BB5FDFD2C5A69370AC6F /* DocumentPickerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857C0EBF8BB4D5443786B54C /* DocumentPickerService.swift */; };
@@ -108,6 +112,7 @@
 
 /* Begin PBXFileReference section */
 		0232E599B749066A550CD867 /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
+		04552A760B2EE2E9C50E65FA /* FaviconService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaviconService.swift; sourceTree = "<group>"; };
 		04630AC02950D75B272D5927 /* KDBXParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDBXParser.swift; sourceTree = "<group>"; };
 		071857A0B486E482F58E96A0 /* KDBXParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDBXParserTests.swift; sourceTree = "<group>"; };
 		1D4B55B0EA14F17F01BB82FE /* NavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationUITests.swift; sourceTree = "<group>"; };
@@ -148,6 +153,8 @@
 		BB1D16EA7A4AAC7EE91A2FB7 /* AutoFillExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoFillExtension.entitlements; sourceTree = "<group>"; };
 		C21F92023642D6774A213759 /* UnlockFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockFlowUITests.swift; sourceTree = "<group>"; };
 		C5851D3E9580E70714F51B41 /* KeeVaultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeeVaultApp.swift; sourceTree = "<group>"; };
+		D4A004F76E3E2182236B90A5 /* FaviconServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaviconServiceTests.swift; sourceTree = "<group>"; };
+		DCE7AF5A1B5681DAA51EA682 /* FaviconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaviconView.swift; sourceTree = "<group>"; };
 		E484DDAC08825D592F42C971 /* CredentialMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialMatcher.swift; sourceTree = "<group>"; };
 		EA801B7F5A40A25CA95BC6B9 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricService.swift; sourceTree = "<group>"; };
 		EC9D9D013823B73C45F84BF6 /* KDBXCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDBXCrypto.swift; sourceTree = "<group>"; };
@@ -204,6 +211,7 @@
 			children = (
 				4A63F67A487C7503A1647768 /* EntryDetailView.swift */,
 				520EE09EDA183240F2C4A150 /* EntryListView.swift */,
+				DCE7AF5A1B5681DAA51EA682 /* FaviconView.swift */,
 				0232E599B749066A550CD867 /* GroupListView.swift */,
 				B339F71610822D7A6BE8EA47 /* SearchView.swift */,
 				2DC6DC511D21A4B536803596 /* SettingsView.swift */,
@@ -242,6 +250,7 @@
 				23A3EB41899AAE77C1519986 /* AutoLockTests.swift */,
 				58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */,
 				994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */,
+				D4A004F76E3E2182236B90A5 /* FaviconServiceTests.swift */,
 				071857A0B486E482F58E96A0 /* KDBXParserTests.swift */,
 				2CECAB218BA8547CF5053EEE /* ModelLogicTests.swift */,
 				91D402DC72928A53EF11B647 /* SettingsServiceTests.swift */,
@@ -315,6 +324,7 @@
 				4AA1BC781576F6FCF822CF5F /* ClipboardService.swift */,
 				E484DDAC08825D592F42C971 /* CredentialMatcher.swift */,
 				857C0EBF8BB4D5443786B54C /* DocumentPickerService.swift */,
+				04552A760B2EE2E9C50E65FA /* FaviconService.swift */,
 				74875E522F92348C08057696 /* HapticService.swift */,
 				9FDDC37E863EB341697FC0AC /* KeychainService.swift */,
 				F24A68304E05C5E4CCF32D33 /* ScreenProtectionService.swift */,
@@ -525,6 +535,7 @@
 				19583614D1A2B6F4DF4E4E3B /* CredentialProviderViewController.swift in Sources */,
 				BD0B5F9051C2C2A30561C0AC /* DocumentPickerService.swift in Sources */,
 				95E05966437433A8DB789E6B /* Entry.swift in Sources */,
+				061D9633EA17E3209A3B1B44 /* FaviconService.swift in Sources */,
 				2C7ED41E165C57037E5F6F06 /* Group.swift in Sources */,
 				13EE88975D4DAB4A327D2791 /* KDBXCrypto.swift in Sources */,
 				AD43A5E642D77D3ED49677A3 /* KDBXParser.swift in Sources */,
@@ -542,6 +553,7 @@
 				54328D9A250B18ED2317E2FB /* AutoLockTests.swift in Sources */,
 				2925BEF7334B1A39784CA5F1 /* CredentialMatcherTests.swift in Sources */,
 				64673414C1434500302E97E8 /* DatabaseViewModelTests.swift in Sources */,
+				29AFD209A654EAEB36105DA4 /* FaviconServiceTests.swift in Sources */,
 				07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */,
 				E334E6B9CF58BFF29EC50139 /* ModelLogicTests.swift in Sources */,
 				A976E0582D032B7830436140 /* SettingsServiceTests.swift in Sources */,
@@ -564,6 +576,8 @@
 				7844FEA590BAD4372335C5DB /* Entry.swift in Sources */,
 				705124D91DF00179DAC44510 /* EntryDetailView.swift in Sources */,
 				C060B8AF23B7362C2D7A4B1E /* EntryListView.swift in Sources */,
+				34A00CC1BD87A0D2AA12D0CE /* FaviconService.swift in Sources */,
+				72736789461296CF636803D0 /* FaviconView.swift in Sources */,
 				899653B778ED3609FB4AF0D5 /* Group.swift in Sources */,
 				157D8E7898E8CC395544235D /* GroupListView.swift in Sources */,
 				49B3018A2B3EF12E93275D42 /* HapticService.swift in Sources */,

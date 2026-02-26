@@ -7,6 +7,7 @@ enum SettingsService {
         static let autoLockTimeout = "KeeVault.autoLockTimeout"
         static let clipboardTimeout = "KeeVault.clipboardTimeout"
         static let autoUnlockWithFaceID = "KeeVault.autoUnlockWithFaceID"
+        static let showWebsiteIcons = "KeeVault.showWebsiteIcons"
     }
 
     private static var sharedDefaults: UserDefaults {
@@ -83,6 +84,15 @@ enum SettingsService {
         }
         set {
             sharedDefaults.set(newValue, forKey: Key.autoUnlockWithFaceID)
+        }
+    }
+
+    static var showWebsiteIcons: Bool {
+        get {
+            sharedDefaults.bool(forKey: Key.showWebsiteIcons)
+        }
+        set {
+            sharedDefaults.set(newValue, forKey: Key.showWebsiteIcons)
         }
     }
 }

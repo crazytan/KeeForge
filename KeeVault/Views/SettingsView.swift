@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var autoLockTimeout = SettingsService.autoLockTimeout
     @State private var clipboardTimeout = SettingsService.clipboardTimeout
     @State private var autoUnlockWithFaceID = SettingsService.autoUnlockWithFaceID
+    @State private var showWebsiteIcons = SettingsService.showWebsiteIcons
 
     var body: some View {
         NavigationStack {
@@ -27,10 +28,26 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Display") {
+                Section {
+                    Toggle("Show Website Icons", isOn: $showWebsiteIcons)
+
                     Picker("Default Sort Order", selection: $viewModel.sortOrder) {
                         ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
                             Text(order.rawValue).tag(order)
+                        }
+                    }
+                } header: {
+                    Text("Display")
+                } footer: {
+                    if showWebsiteIcons {
+                        Text("Fetches icons from Google. Only the website domain is sent.")
+                    }
+                }
+
+                if showWebsiteIcons {
+                    Section {
+                        Button("Clear Favicon Cache", role: .destructive) {
+                            FaviconService.clearCache()
                         }
                     }
                 }
@@ -57,6 +74,9 @@ struct SettingsView: View {
             }
             .onChange(of: autoUnlockWithFaceID) { _, newValue in
                 SettingsService.autoUnlockWithFaceID = newValue
+            }
+            .onChange(of: showWebsiteIcons) { _, newValue in
+                SettingsService.showWebsiteIcons = newValue
             }
         }
     }
