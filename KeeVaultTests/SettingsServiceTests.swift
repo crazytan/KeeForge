@@ -4,10 +4,17 @@ import XCTest
 final class SettingsServiceTests: XCTestCase {
     private let autoLockKey = "KeeVault.autoLockTimeout"
     private let clipboardKey = "KeeVault.clipboardTimeout"
+    private let autoUnlockWithFaceIDKey = "KeeVault.autoUnlockWithFaceID"
+
+    private var sharedDefaults: UserDefaults {
+        UserDefaults(suiteName: SharedVaultStore.appGroupID) ?? .standard
+    }
 
     override func tearDown() {
         UserDefaults.standard.removeObject(forKey: autoLockKey)
         UserDefaults.standard.removeObject(forKey: clipboardKey)
+        UserDefaults.standard.removeObject(forKey: autoUnlockWithFaceIDKey)
+        sharedDefaults.removeObject(forKey: autoUnlockWithFaceIDKey)
         super.tearDown()
     }
 
@@ -21,6 +28,11 @@ final class SettingsServiceTests: XCTestCase {
     func testClipboardTimeoutDefaultsToThirtySeconds() {
         UserDefaults.standard.removeObject(forKey: clipboardKey)
         XCTAssertEqual(SettingsService.clipboardTimeout, .thirtySeconds)
+    }
+
+    func testAutoUnlockWithFaceIDDefaultsToOff() {
+        sharedDefaults.removeObject(forKey: autoUnlockWithFaceIDKey)
+        XCTAssertFalse(SettingsService.autoUnlockWithFaceID)
     }
 
     // MARK: - Round-trip persistence
@@ -37,6 +49,14 @@ final class SettingsServiceTests: XCTestCase {
             SettingsService.clipboardTimeout = value
             XCTAssertEqual(SettingsService.clipboardTimeout, value, "Failed for \(value.rawValue)")
         }
+    }
+
+    func testAutoUnlockWithFaceIDPersists() {
+        SettingsService.autoUnlockWithFaceID = true
+        XCTAssertTrue(SettingsService.autoUnlockWithFaceID)
+
+        SettingsService.autoUnlockWithFaceID = false
+        XCTAssertFalse(SettingsService.autoUnlockWithFaceID)
     }
 
     // MARK: - Seconds values

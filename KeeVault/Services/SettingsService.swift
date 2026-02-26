@@ -6,6 +6,11 @@ enum SettingsService {
     private enum Key {
         static let autoLockTimeout = "KeeVault.autoLockTimeout"
         static let clipboardTimeout = "KeeVault.clipboardTimeout"
+        static let autoUnlockWithFaceID = "KeeVault.autoUnlockWithFaceID"
+    }
+
+    private static var sharedDefaults: UserDefaults {
+        UserDefaults(suiteName: SharedVaultStore.appGroupID) ?? .standard
     }
 
     // MARK: - Auto-Lock Timeout
@@ -69,6 +74,15 @@ enum SettingsService {
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: Key.clipboardTimeout)
+        }
+    }
+
+    static var autoUnlockWithFaceID: Bool {
+        get {
+            sharedDefaults.bool(forKey: Key.autoUnlockWithFaceID)
+        }
+        set {
+            sharedDefaults.set(newValue, forKey: Key.autoUnlockWithFaceID)
         }
     }
 }

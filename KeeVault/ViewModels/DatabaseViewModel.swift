@@ -25,6 +25,7 @@ final class DatabaseViewModel {
     }
 
     private(set) var state: State = .locked
+    private(set) var lockCycleID = 0
     private(set) var rootGroup: KPGroup?
     private(set) var inactivityTimer: Timer?
     private(set) var inactivityTimerInterval: TimeInterval?
@@ -130,6 +131,7 @@ final class DatabaseViewModel {
             try? DocumentPickerService.saveBookmark(for: url)
         }
         databaseURL = url
+        beginNewLockCycle()
         state = .locked
     }
 
@@ -204,6 +206,7 @@ final class DatabaseViewModel {
 
     func lock() {
         cancelInactivityTimer()
+        beginNewLockCycle()
         state = .locked
         rootGroup = nil
         compositeKey = nil
@@ -234,6 +237,10 @@ final class DatabaseViewModel {
     func resetInactivityTimer() {
         guard case .unlocked = state else { return }
         startInactivityTimer()
+    }
+
+    private func beginNewLockCycle() {
+        lockCycleID += 1
     }
 
     private func readSecurityScoped(url: URL) throws -> Data {
