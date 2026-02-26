@@ -6,7 +6,6 @@
 - (none currently)
 
 ### Features
-- Exclude Recycle Bin from search results and AutoFill
 - Favicon support (download from Google favicon service; opt-in since it adds network calls)
 
 ### v2 roadmap
@@ -21,6 +20,7 @@
 - Removed debug state label from unlock screen
 - Auto Face ID unlock on app open (opt-in setting in Security)
 - Auto Face ID unlock in AutoFill extension (shared via App Group)
+- Exclude Recycle Bin from search, AutoFill, and group navigation
 - Lock button in group list toolbar
 - Renamed "Clipboard Timeout" → "Clipboard Clear Timeout" in Settings
 - Renamed "Sort Order" → "Default Sort Order" in Settings
