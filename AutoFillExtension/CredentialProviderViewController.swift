@@ -6,6 +6,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private var serviceIdentifiers: [ASCredentialServiceIdentifier] = []
     private var parsedEntries: [KPEntry] = []
     private var isUnlockInProgress = false
+    private var didAttemptAutoBiometricUnlock = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -14,11 +15,13 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
         self.serviceIdentifiers = serviceIdentifiers
+        didAttemptAutoBiometricUnlock = false
         presentUnlockPromptIfNeeded()
     }
 
     override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
         serviceIdentifiers = [credentialIdentity.serviceIdentifier]
+        didAttemptAutoBiometricUnlock = false
         presentUnlockPromptIfNeeded()
     }
 
@@ -33,6 +36,12 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     private func presentUnlockPromptIfNeeded() {
         guard presentedViewController == nil, !isUnlockInProgress else { return }
+
+        if shouldAutoUnlockWithBiometrics {
+            didAttemptAutoBiometricUnlock = true
+            unlockWithBiometrics()
+            return
+        }
 
         let alert = UIAlertController(
             title: "Unlock KeeVault",
@@ -58,13 +67,33 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             self.unlockWithPassword(password)
         })
 
-        if BiometricService.isAvailable {
-            alert.addAction(UIAlertAction(title: "Use Face ID", style: .default) { [weak self] _ in
+        if canUseBiometrics {
+            alert.addAction(UIAlertAction(title: biometricActionTitle, style: .default) { [weak self] _ in
                 self?.unlockWithBiometrics()
             })
         }
 
         present(alert, animated: true)
+    }
+
+    private var shouldAutoUnlockWithBiometrics: Bool {
+        guard !didAttemptAutoBiometricUnlock else { return false }
+        guard SettingsService.autoUnlockWithFaceID else { return false }
+        return canUseBiometrics
+    }
+
+    private var canUseBiometrics: Bool {
+        guard BiometricService.isAvailable else { return false }
+        guard let databasePath = SharedVaultStore.loadBookmarkedURL()?.path else { return false }
+        return KeychainService.hasStoredKey(for: databasePath)
+    }
+
+    private var biometricActionTitle: String {
+        switch BiometricService.availableType {
+        case .faceID: "Use Face ID"
+        case .touchID: "Use Touch ID"
+        case .none: "Use Biometrics"
+        }
     }
 
     private func unlockWithPassword(_ password: String) {

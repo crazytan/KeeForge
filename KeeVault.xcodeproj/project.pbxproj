@@ -13,6 +13,7 @@
 		118B92B5F516A3C8F95B2A06 /* CredentialMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E484DDAC08825D592F42C971 /* CredentialMatcher.swift */; };
 		13EE88975D4DAB4A327D2791 /* KDBXCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC9D9D013823B73C45F84BF6 /* KDBXCrypto.swift */; };
 		157D8E7898E8CC395544235D /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0232E599B749066A550CD867 /* GroupListView.swift */; };
+		16A33681EAECD1A78AC9B6D8 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E4DAEBA0358D91AC6EEA84 /* SettingsService.swift */; };
 		178E8F7C96810164EEE032EF /* Argon2Swift in Frameworks */ = {isa = PBXBuildFile; productRef = 1C50F09A3FF6EAC0D76F5B65 /* Argon2Swift */; };
 		19583614D1A2B6F4DF4E4E3B /* CredentialProviderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0D3EBAABD59A7BD9FEFB5B /* CredentialProviderViewController.swift */; };
 		1AE06B26374913022AF0B512 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87A9BBBD6B10534CBFC5D62C /* Assets.xcassets */; };
@@ -528,6 +529,7 @@
 				13EE88975D4DAB4A327D2791 /* KDBXCrypto.swift in Sources */,
 				AD43A5E642D77D3ED49677A3 /* KDBXParser.swift in Sources */,
 				BCAA797F0076C1D3E99CCFB4 /* KeychainService.swift in Sources */,
+				16A33681EAECD1A78AC9B6D8 /* SettingsService.swift in Sources */,
 				433DCCF5BB49DC7EA348D9F6 /* SharedVaultStore.swift in Sources */,
 				8A8250A8AA57751BB0E04F7B /* TOTPGenerator.swift in Sources */,
 			);

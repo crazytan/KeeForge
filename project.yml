@@ -69,6 +69,7 @@ targets:
       - path: KeeVault/Services/BiometricService.swift
       - path: KeeVault/Services/DocumentPickerService.swift
       - path: KeeVault/Services/KeychainService.swift
+      - path: KeeVault/Services/SettingsService.swift
       - path: KeeVault/Services/SharedVaultStore.swift
       - path: KeeVault/Services/CredentialMatcher.swift
 

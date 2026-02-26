@@ -6,11 +6,14 @@ struct SettingsView: View {
 
     @State private var autoLockTimeout = SettingsService.autoLockTimeout
     @State private var clipboardTimeout = SettingsService.clipboardTimeout
+    @State private var autoUnlockWithFaceID = SettingsService.autoUnlockWithFaceID
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Security") {
+                    Toggle("Auto-Unlock with Face ID", isOn: $autoUnlockWithFaceID)
+
                     Picker("Auto-Lock Timeout", selection: $autoLockTimeout) {
                         ForEach(SettingsService.AutoLockTimeout.allCases, id: \.self) { option in
                             Text(option.rawValue).tag(option)
@@ -51,6 +54,9 @@ struct SettingsView: View {
             }
             .onChange(of: clipboardTimeout) { _, newValue in
                 SettingsService.clipboardTimeout = newValue
+            }
+            .onChange(of: autoUnlockWithFaceID) { _, newValue in
+                SettingsService.autoUnlockWithFaceID = newValue
             }
         }
     }

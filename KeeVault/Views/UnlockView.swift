@@ -4,6 +4,7 @@ struct UnlockView: View {
     @Bindable var viewModel: DatabaseViewModel
     @State private var password = ""
     @State private var showFilePicker = false
+    @State private var autoUnlockAttemptedLockCycle: Int?
     @FocusState private var passwordFocused: Bool
 
     var body: some View {
@@ -31,6 +32,15 @@ struct UnlockView: View {
             allowedContentTypes: [.init(filenameExtension: "kdbx")!],
             onCompletion: handleFileSelection
         )
+        .onAppear {
+            autoUnlockWithBiometricsIfNeeded()
+        }
+        .onChange(of: viewModel.lockCycleID) { _, _ in
+            autoUnlockWithBiometricsIfNeeded()
+        }
+        .onChange(of: viewModel.canUseBiometrics) { _, _ in
+            autoUnlockWithBiometricsIfNeeded()
+        }
     }
 
     private var passwordSection: some View {
@@ -115,6 +125,17 @@ struct UnlockView: View {
         Task {
             await viewModel.unlockWithBiometrics()
         }
+    }
+
+    private func autoUnlockWithBiometricsIfNeeded() {
+        guard SettingsService.autoUnlockWithFaceID else { return }
+        guard viewModel.hasSavedFile else { return }
+        guard viewModel.canUseBiometrics else { return }
+        guard case .locked = viewModel.state else { return }
+        guard autoUnlockAttemptedLockCycle != viewModel.lockCycleID else { return }
+
+        autoUnlockAttemptedLockCycle = viewModel.lockCycleID
+        unlockWithBiometrics()
     }
 
     private func handleFileSelection(_ result: Result<URL, Error>) {

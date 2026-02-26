@@ -22,6 +22,7 @@ final class DatabaseViewModelTests: XCTestCase {
         XCTAssertState(vm.state, is: .locked)
         XCTAssertFalse(vm.hasSavedFile)
         XCTAssertFalse(vm.canUseBiometrics)
+        XCTAssertEqual(vm.lockCycleID, 0)
         XCTAssertTrue(vm.searchResults.isEmpty)
     }
 
@@ -33,6 +34,18 @@ final class DatabaseViewModelTests: XCTestCase {
 
         XCTAssertTrue(vm.hasSavedFile)
         XCTAssertState(vm.state, is: .locked)
+        XCTAssertEqual(vm.lockCycleID, 1)
+    }
+
+    func testLockIncrementsLockCycle() {
+        let vm = DatabaseViewModel()
+        XCTAssertEqual(vm.lockCycleID, 0)
+
+        vm.lock()
+        XCTAssertEqual(vm.lockCycleID, 1)
+
+        vm.lock()
+        XCTAssertEqual(vm.lockCycleID, 2)
     }
 
     func testUnlockWithCorrectPasswordTransitionsToUnlocked() async throws {
