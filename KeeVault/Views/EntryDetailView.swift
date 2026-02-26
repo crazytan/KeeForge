@@ -7,9 +7,7 @@ struct EntryDetailView: View {
         List {
             Section {
                 HStack {
-                    Image(systemName: entry.systemIconName)
-                        .font(.title)
-                        .foregroundStyle(.tint)
+                    FaviconView(url: entry.url, iconID: entry.iconID, size: 40)
                     Text(entry.title.isEmpty ? "(untitled)" : entry.title)
                         .font(.title2.bold())
                 }

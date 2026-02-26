@@ -119,8 +119,7 @@ struct EntryRow: View {
 
     var body: some View {
         HStack {
-            Image(systemName: entry.systemIconName)
-                .foregroundStyle(.tint)
+            FaviconView(url: entry.url, iconID: entry.iconID, size: 24)
                 .frame(width: 28)
 
             VStack(alignment: .leading) {

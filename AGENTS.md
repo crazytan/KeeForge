@@ -27,6 +27,7 @@ KeeVault/
 │   ├── EntryDetailView.swift      # Entry detail with copy actions + Face ID for passwords
 │   ├── EntryListView.swift        # Flat entry list within a group
 │   ├── SearchView.swift           # Search results overlay
+│   ├── FaviconView.swift          # Favicon image with fallback chain (cached → fetch → iconID)
 │   └── SettingsView.swift         # Settings page (security, display, about)
 ├── Services/
 │   ├── BiometricService.swift     # Face ID / Touch ID availability + authentication
@@ -36,6 +37,7 @@ KeeVault/
 │   ├── CredentialMatcher.swift    # URL matching for AutoFill
 │   ├── ClipboardService.swift     # Copy with auto-expiry
 │   ├── DocumentPickerService.swift # File bookmark management
+│   ├── FaviconService.swift        # Favicon fetch (Google API) + disk cache with TTL
 │   ├── ScreenProtectionService.swift # Shield on background
 │   └── HapticService.swift        # Haptic feedback
 ├── Extensions/
@@ -67,7 +69,8 @@ TestFixtures/test.kdbx  # Test database
 - **Lock cycle tracking:** `lockCycleID` increments on each lock, used to prevent auto-unlock retry loops
 - **Recycle Bin:** parsed from `<RecycleBinUUID>` in XML metadata, stored as `recycleBinUUID` on root `KPGroup`. Excluded from search, AutoFill, and group navigation.
 - **Settings storage:** Most settings in `UserDefaults.standard`. Settings shared with AutoFill extension (like `autoUnlockWithFaceID`) use `UserDefaults(suiteName: SharedVaultStore.appGroupID)`.
-- **App Group:** `group.com.keevault.shared` — shared between main app and AutoFill extension for database bookmark + shared settings
+- **App Group:** `group.com.keevault.shared` — shared between main app and AutoFill extension for database bookmark + shared settings + favicon cache
+- **Favicons:** Opt-in via `SettingsService.showWebsiteIcons` (off by default). `FaviconService` fetches from Google favicon API (`/s2/favicons?domain=&sz=64`), caches to App Group container (`favicons/` directory) with SHA256(domain) filenames and 7-day TTL. `FaviconView` is a SwiftUI component with fallback chain: cached → fetch → KeePass iconID → generic key icon. Used in `EntryRow` (24×24), `EntryDetailView` (40×40), and search results.
 
 ## Conventions
 
@@ -93,7 +96,7 @@ TestFixtures/test.kdbx  # Test database
 - Never store raw master password
 - Auto-lock on background, clear sensitive state
 - Clipboard auto-expires (configurable, default 30s)
-- No analytics, telemetry, or network calls
+- No analytics or telemetry. Network calls only for opt-in favicon fetching (domain only, no credentials)
 - Face ID required to reveal/copy passwords
 
 ## Stable Core (change only for real bugs)

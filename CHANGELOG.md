@@ -6,7 +6,7 @@
 - (none currently)
 
 ### Features
-- Favicon support (download from Google favicon service; opt-in since it adds network calls)
+- (none currently)
 
 ### v2 roadmap
 - Editing support (create/modify entries)
@@ -15,6 +15,8 @@
 
 ## Unreleased
 
+- Add opt-in website favicon support with disk cache (Google favicon API, SHA256 cache keys, 7-day TTL)
+- Add "Show Website Icons" toggle in Settings (off by default) with "Clear Favicon Cache" action
 - Fixed AutoFill subtitle missing in iOS Settings (use ProvidesPasswords key)
 - Fixed 3 failing UI tests (navigation helpers now prefer non-empty groups)
 - Removed debug state label from unlock screen
