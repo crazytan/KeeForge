@@ -3,26 +3,26 @@
 ## TODO
 
 ### Bugs
-- [x] Face ID unlock button not appearing on device (fixed keychain existence check: use LAContext with interactionNotAllowed instead of deprecated kSecUseAuthenticationUISkip, broadened status codes)
-- [ ] AutoFill from Safari not working as expected
-- [ ] AutoFill subtitle missing in iOS Settings
+- AutoFill from Safari not working as expected
+- AutoFill subtitle missing in iOS Settings
+- 3 UI tests failing (EntryDetail, Navigation, Search) — can't find entries after unlock, likely UI test mode detection issue
 
 ### Features
-- [x] Settings page (clipboard timeout, auto-lock timeout, auto Face ID, sort preference)
-- [x] Auto-lock after inactivity timeout (foreground idle timer with configurable timeout)
-- [ ] Auto Face ID unlock on app open (opt-in; depends on keychain bug fix)
-- [ ] Favicon support (download from Google favicon service; opt-in since it adds network calls)
-- [x] List sorting by different attributes (created, updated, title)
-- [x] Multiple URLs per entry via KP2A_URL custom fields (also improves AutoFill matching)
-- [x] Add tests for auto-lock on background behavior
+- Auto Face ID unlock on app open (opt-in setting)
+- Auto Face ID unlock in AutoFill extension (when opt-in enabled)
+- Favicon support (download from Google favicon service; opt-in since it adds network calls)
 
 ### v2 roadmap
-- [ ] Editing support (create/modify entries)
-- [ ] iPad support
-- [ ] Sync / attachments
+- Editing support (create/modify entries)
+- iPad support
+- Sync / attachments
 
 ## Unreleased
 
+- Lock button in group list toolbar
+- Renamed "Clipboard Timeout" → "Clipboard Clear Timeout" in Settings
+- Renamed "Sort Order" → "Default Sort Order" in Settings
+- Removed GitHub Repository link from Settings
 - Fixed Face ID unlock not appearing on device (improved keychain existence check)
 - Auto-lock inactivity timer (resets on user interaction, configurable in Settings)
 - Settings page with auto-lock timeout, clipboard timeout, sort order, and about section

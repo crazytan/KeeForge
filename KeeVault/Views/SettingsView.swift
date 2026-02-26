@@ -17,7 +17,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    Picker("Clipboard Timeout", selection: $clipboardTimeout) {
+                    Picker("Clipboard Clear Timeout", selection: $clipboardTimeout) {
                         ForEach(SettingsService.ClipboardTimeout.allCases, id: \.self) { option in
                             Text(option.rawValue).tag(option)
                         }
@@ -25,7 +25,7 @@ struct SettingsView: View {
                 }
 
                 Section("Display") {
-                    Picker("Sort Order", selection: $viewModel.sortOrder) {
+                    Picker("Default Sort Order", selection: $viewModel.sortOrder) {
                         ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
                             Text(order.rawValue).tag(order)
                         }
@@ -37,7 +37,6 @@ struct SettingsView: View {
 
                     LabeledContent("Version", value: appVersion)
 
-                    Link("GitHub Repository", destination: URL(string: "https://github.com/crazytan/KeeVault")!)
                 }
             }
             .navigationTitle("Settings")

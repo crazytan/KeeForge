@@ -44,6 +44,13 @@ struct GroupListView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         HStack(spacing: 12) {
+                            Button {
+                                viewModel.lock()
+                            } label: {
+                                Image(systemName: "lock")
+                            }
+                            .accessibilityIdentifier("lock.button")
+
                             Menu {
                                 Picker("Sort By", selection: $viewModel.sortOrder) {
                                     ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
