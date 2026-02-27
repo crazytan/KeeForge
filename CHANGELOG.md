@@ -8,6 +8,14 @@
 ### Features
 - (none currently)
 
+### Security (from SECURITY_AUDIT.md)
+- [ ] **HIGH-1:** Zero cryptographic keys from memory after use (SecureBytes wrapper with `memset_s` in deinit)
+- [ ] **HIGH-2:** Replace `String` with `SecureString` for passwords/TOTP secrets (lazy decrypt on demand)
+- [ ] **MEDIUM-1:** Switch favicon provider from Google to DuckDuckGo (privacy)
+- [ ] **MEDIUM-5:** Filter internal/private domain names from favicon fetching
+- [ ] **LOW-2:** Add exponential backoff after failed password attempts
+- [ ] **LOW-3:** Detect active screen recording (`UIScreen.isCaptured`) and show warning/blur
+
 ### v2 roadmap
 - Editing support (create/modify entries)
 - iPad support
