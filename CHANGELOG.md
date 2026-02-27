@@ -15,24 +15,47 @@
 
 ## Unreleased
 
-- Add opt-in website favicon support with disk cache (Google favicon API, SHA256 cache keys, 7-day TTL)
-- Add "Show Website Icons" toggle in Settings (off by default) with "Clear Favicon Cache" action
-- Fixed AutoFill subtitle missing in iOS Settings (use ProvidesPasswords key)
-- Fixed 3 failing UI tests (navigation helpers now prefer non-empty groups)
-- Removed debug state label from unlock screen
+*(nothing yet)*
+
+## v1.2.0 (2026-02-26)
+
+### New Features
+- Opt-in website favicon support with disk cache (Google favicon API, SHA256 cache keys, 7-day TTL)
+- "Download Website Favicons" toggle in Settings (off by default) with "Clear Favicon Cache" action
 - Auto Face ID unlock on app open (opt-in setting in Security)
 - Auto Face ID unlock in AutoFill extension (shared via App Group)
-- Exclude Recycle Bin from search, AutoFill, and group navigation
-- Lock button in group list toolbar
-- Renamed "Clipboard Timeout" → "Clipboard Clear Timeout" in Settings
-- Renamed "Sort Order" → "Default Sort Order" in Settings
-- Removed GitHub Repository link from Settings
-- Fixed Face ID unlock not appearing on device (improved keychain existence check)
 - Auto-lock inactivity timer (resets on user interaction, configurable in Settings)
-- Settings page with auto-lock timeout, clipboard timeout, sort order, and about section
-- Fixed keychain account key to use filename instead of full path (bookmark-resolved paths change between launches)
-- List sorting by title, created date, or modified date (persisted to UserDefaults)
+- List sorting by title, created date, or modified date (persisted)
 - Multiple URLs per entry via KP2A_URL custom fields (display + AutoFill matching)
+- Exclude Recycle Bin from search, AutoFill, and group navigation
+
+### Security
+- Clipboard now uses `.localOnly` — passwords no longer sync via Universal Clipboard
+- Constant-time HMAC/hash comparison (timing side-channel mitigation)
+- Decompression bomb protection (256MB limit)
+- Favicon cache written with `NSFileProtectionComplete`
+- AutoFill extension clears parsed entries from memory after use
+- Removed "Never" from clipboard clear timeout options
+- Production logging gated behind `#if DEBUG`
+- Negative block size validation in KDBX parser
+
+### Fixes
+- Fixed duplicate lock button in root view
+- Fixed AutoFill subtitle missing in iOS Settings
+- Fixed Face ID unlock not appearing on device (improved keychain existence check)
+- Fixed keychain account key to use filename instead of full path
+- Fixed 3 failing UI tests (navigation helpers now prefer non-empty groups)
+
+### UI
+- Renamed "Show Website Icons" → "Download Website Favicons"
+- Renamed "Clipboard Timeout" → "Clipboard Clear Timeout"
+- Renamed "Sort Order" → "Default Sort Order"
+- Lock button in group list toolbar
+- Removed debug state label from unlock screen
+- Removed GitHub Repository link from Settings
+
+### Infrastructure
+- GitHub Actions CI workflow (build + unit tests)
 - Auto-lock unit tests + enriched test fixture (7 entries, nested groups, unicode, edge cases)
 
 ## v1.1.0 (2026-02-22)
