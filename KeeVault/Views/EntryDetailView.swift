@@ -1,7 +1,9 @@
+import CryptoKit
 import SwiftUI
 
 struct EntryDetailView: View {
     let entry: KPEntry
+    let sessionKey: SymmetricKey
 
     var body: some View {
         List {
@@ -17,8 +19,8 @@ struct EntryDetailView: View {
                 FieldRow(label: "Username", value: entry.username, icon: "person.fill")
             }
 
-            if !entry.password.isEmpty {
-                PasswordFieldRow(password: entry.password)
+            if entry.hasPassword {
+                PasswordFieldRow(password: entry.password, sessionKey: sessionKey)
             }
 
             if !entry.url.isEmpty {
@@ -30,7 +32,7 @@ struct EntryDetailView: View {
             }
 
             if entry.totpConfig != nil {
-                TOTPSection(config: entry.totpConfig!)
+                TOTPSection(config: entry.totpConfig!, sessionKey: sessionKey)
             }
 
             if !entry.notes.isEmpty {
@@ -95,8 +97,10 @@ struct FieldRow: View {
 }
 
 struct PasswordFieldRow: View {
-    let password: String
+    let password: EncryptedValue
+    let sessionKey: SymmetricKey
     @State private var revealed = false
+    @State private var revealedText: String?
     @State private var authenticating = false
 
     var body: some View {
@@ -105,8 +109,8 @@ struct PasswordFieldRow: View {
                 Image(systemName: "lock.fill")
                     .foregroundStyle(.secondary)
                     .frame(width: 24)
-                if revealed {
-                    Text(password)
+                if revealed, let text = revealedText {
+                    Text(text)
                         .font(.body.monospaced())
                         .textSelection(.enabled)
                 } else {
@@ -118,6 +122,7 @@ struct PasswordFieldRow: View {
                     if revealed {
                         HapticService.tap()
                         revealed = false
+                        revealedText = nil
                     } else {
                         authenticateAndReveal()
                     }
@@ -126,7 +131,7 @@ struct PasswordFieldRow: View {
                 }
                 .disabled(authenticating)
                 .accessibilityIdentifier("entry.password.reveal")
-                CopyButton(text: password, requireAuth: true, accessibilityID: "entry.copy.password")
+                CopyButton(resolveText: { (try? password.decrypt(using: sessionKey)) ?? "" }, requireAuth: true, accessibilityID: "entry.copy.password")
             }
         }
     }
@@ -143,6 +148,7 @@ struct PasswordFieldRow: View {
                     _ = try await BiometricService.authenticate(reason: "View password")
                     await MainActor.run {
                         HapticService.success()
+                        revealedText = (try? password.decrypt(using: sessionKey)) ?? ""
                         revealed = true
                     }
                 } catch {
@@ -155,6 +161,7 @@ struct PasswordFieldRow: View {
             }
         } else {
             HapticService.tap()
+            revealedText = (try? password.decrypt(using: sessionKey)) ?? ""
             revealed = true
         }
     }
@@ -191,10 +198,24 @@ struct URLFieldRow: View {
 }
 
 struct CopyButton: View {
-    let text: String
+    private let resolveText: () -> String
     var requireAuth: Bool = false
     let accessibilityID: String
     @State private var copied = false
+
+    /// Copy a plaintext value.
+    init(text: String, requireAuth: Bool = false, accessibilityID: String) {
+        self.resolveText = { text }
+        self.requireAuth = requireAuth
+        self.accessibilityID = accessibilityID
+    }
+
+    /// Copy a value that is decrypted lazily on demand.
+    init(resolveText: @escaping () -> String, requireAuth: Bool = false, accessibilityID: String) {
+        self.resolveText = resolveText
+        self.requireAuth = requireAuth
+        self.accessibilityID = accessibilityID
+    }
 
     var body: some View {
         Button {
@@ -227,7 +248,7 @@ struct CopyButton: View {
     }
 
     private func performCopy() {
-        ClipboardService.copy(text)
+        ClipboardService.copy(resolveText())
         copied = true
         HapticService.success()
         Task {
@@ -243,9 +264,9 @@ struct TOTPSection: View {
     let config: TOTPConfig
     @State private var totpVM: TOTPViewModel
 
-    init(config: TOTPConfig) {
+    init(config: TOTPConfig, sessionKey: SymmetricKey) {
         self.config = config
-        self._totpVM = State(initialValue: TOTPViewModel(config: config))
+        self._totpVM = State(initialValue: TOTPViewModel(config: config, sessionKey: sessionKey))
     }
 
     var body: some View {

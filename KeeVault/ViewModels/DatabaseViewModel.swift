@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import OSLog
 import SwiftUI
@@ -44,6 +45,7 @@ final class DatabaseViewModel {
 
     private var databaseURL: URL?
     private(set) var compositeKey: Data?
+    private(set) var sessionKey: SymmetricKey?
     private let isUITesting: Bool
 
     var hasSavedFile: Bool {
@@ -161,13 +163,15 @@ final class DatabaseViewModel {
                 Self.diagnostic("unlock: read \(data.count) bytes, kdbxMagic=\(hasMagic)")
             }
             let compositeKey = KDBXCrypto.compositeKey(password: password)
+            let sessionKey = SymmetricKey(size: .bits256)
 
             let root = try await Task.detached {
-                try KDBXParser.parse(data: data, password: password)
+                try KDBXParser.parse(data: data, password: password, sessionKey: sessionKey)
             }.value
 
             self.rootGroup = root
             self.compositeKey = compositeKey
+            self.sessionKey = sessionKey
             state = .unlocked
             startInactivityTimer()
 
@@ -196,13 +200,15 @@ final class DatabaseViewModel {
             let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
 
             let data = try readSecurityScoped(url: url)
+            let sessionKey = SymmetricKey(size: .bits256)
 
             let root = try await Task.detached {
-                try KDBXParser.parse(data: data, compositeKey: compositeKey)
+                try KDBXParser.parse(data: data, compositeKey: compositeKey, sessionKey: sessionKey)
             }.value
 
             self.rootGroup = root
             self.compositeKey = compositeKey
+            self.sessionKey = sessionKey
             state = .unlocked
             startInactivityTimer()
         } catch {
@@ -216,6 +222,7 @@ final class DatabaseViewModel {
         state = .locked
         rootGroup = nil
         compositeKey = nil
+        sessionKey = nil
         searchText = ""
         navigationPath = NavigationPath()
     }

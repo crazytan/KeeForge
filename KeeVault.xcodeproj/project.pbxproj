@@ -35,6 +35,7 @@
 		4BE5E85653CA857FEF6DB144 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65F32F879F0C5EC8B81B446 /* SearchUITests.swift */; };
 		4F827D1E744FFF7C979DCB0C /* KeeVaultUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC215325715C988E238D34 /* KeeVaultUITestCase.swift */; };
 		54328D9A250B18ED2317E2FB /* AutoLockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23A3EB41899AAE77C1519986 /* AutoLockTests.swift */; };
+		62A687CC49BAC4A84F5E9A3C /* EncryptedValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D045518BD89632927E4146 /* EncryptedValue.swift */; };
 		64673414C1434500302E97E8 /* DatabaseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */; };
 		6953D2616ED330BD76E10ACD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC6DC511D21A4B536803596 /* SettingsView.swift */; };
 		6BB187D584A430CA757E5841 /* TOTPGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D53142E0E400EAFDFC0DB8 /* TOTPGenerator.swift */; };
@@ -44,6 +45,7 @@
 		7844FEA590BAD4372335C5DB /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FE935F12B1213BF2AA4887 /* Entry.swift */; };
 		7BC70E4F773B35E41B4358EA /* UnlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF81D6E9F454E1A0E39F806 /* UnlockView.swift */; };
 		7D54BB5FDFD2C5A69370AC6F /* DocumentPickerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857C0EBF8BB4D5443786B54C /* DocumentPickerService.swift */; };
+		7E41BC21C10C6D60C27C22DE /* EncryptedValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 903AD0085A4C9F4089C22B2F /* EncryptedValueTests.swift */; };
 		830A764AB9F50D4F24C12E92 /* SharedVaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1CB28C4D8F04F4885EA61E /* SharedVaultStore.swift */; };
 		899653B778ED3609FB4AF0D5 /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDAB0B2AA37625E26242E53 /* Group.swift */; };
 		8A8250A8AA57751BB0E04F7B /* TOTPGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D53142E0E400EAFDFC0DB8 /* TOTPGenerator.swift */; };
@@ -64,6 +66,7 @@
 		C060B8AF23B7362C2D7A4B1E /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520EE09EDA183240F2C4A150 /* EntryListView.swift */; };
 		C1E95CA4A0681735A4B9E962 /* TOTPViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E82D92CFD9B903490902A7 /* TOTPViewModelTests.swift */; };
 		CAC0DEC7F65A41278FAFC80F /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E4DAEBA0358D91AC6EEA84 /* SettingsService.swift */; };
+		CC9768BF3818FF466ACAA37D /* EncryptedValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D045518BD89632927E4146 /* EncryptedValue.swift */; };
 		CF81B0220CC557748D33862D /* AutoFillExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B89BC0DD2296EA1CDD831E3C /* AutoFillExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D64C0F898BA4FD7440AEC398 /* DatabaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF1680F80D263A4F12E1FD11 /* DatabaseViewModel.swift */; };
 		DFE4172CD97B51357093526D /* KDBXParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04630AC02950D75B272D5927 /* KDBXParser.swift */; };
@@ -140,6 +143,7 @@
 		87732690E19B56E5EFC4AA4F /* TOTPGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGeneratorTests.swift; sourceTree = "<group>"; };
 		87A9BBBD6B10534CBFC5D62C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		89FE935F12B1213BF2AA4887 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		903AD0085A4C9F4089C22B2F /* EncryptedValueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedValueTests.swift; sourceTree = "<group>"; };
 		91D402DC72928A53EF11B647 /* SettingsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsServiceTests.swift; sourceTree = "<group>"; };
 		955B1BDEF32074A97D218B94 /* KeeVaultTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KeeVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98D53142E0E400EAFDFC0DB8 /* TOTPGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGenerator.swift; sourceTree = "<group>"; };
@@ -154,6 +158,7 @@
 		C21F92023642D6774A213759 /* UnlockFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnlockFlowUITests.swift; sourceTree = "<group>"; };
 		C5851D3E9580E70714F51B41 /* KeeVaultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeeVaultApp.swift; sourceTree = "<group>"; };
 		D4A004F76E3E2182236B90A5 /* FaviconServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaviconServiceTests.swift; sourceTree = "<group>"; };
+		D4D045518BD89632927E4146 /* EncryptedValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedValue.swift; sourceTree = "<group>"; };
 		DCE7AF5A1B5681DAA51EA682 /* FaviconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaviconView.swift; sourceTree = "<group>"; };
 		E484DDAC08825D592F42C971 /* CredentialMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialMatcher.swift; sourceTree = "<group>"; };
 		EA801B7F5A40A25CA95BC6B9 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricService.swift; sourceTree = "<group>"; };
@@ -224,6 +229,7 @@
 		397037C85461299C2611E3C5 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D4D045518BD89632927E4146 /* EncryptedValue.swift */,
 				89FE935F12B1213BF2AA4887 /* Entry.swift */,
 				5FDAB0B2AA37625E26242E53 /* Group.swift */,
 				EC9D9D013823B73C45F84BF6 /* KDBXCrypto.swift */,
@@ -250,6 +256,7 @@
 				23A3EB41899AAE77C1519986 /* AutoLockTests.swift */,
 				58B65B1D329FCBD2769D7650 /* CredentialMatcherTests.swift */,
 				994B7822924FC4C783E5BF76 /* DatabaseViewModelTests.swift */,
+				903AD0085A4C9F4089C22B2F /* EncryptedValueTests.swift */,
 				D4A004F76E3E2182236B90A5 /* FaviconServiceTests.swift */,
 				071857A0B486E482F58E96A0 /* KDBXParserTests.swift */,
 				2CECAB218BA8547CF5053EEE /* ModelLogicTests.swift */,
@@ -534,6 +541,7 @@
 				118B92B5F516A3C8F95B2A06 /* CredentialMatcher.swift in Sources */,
 				19583614D1A2B6F4DF4E4E3B /* CredentialProviderViewController.swift in Sources */,
 				BD0B5F9051C2C2A30561C0AC /* DocumentPickerService.swift in Sources */,
+				CC9768BF3818FF466ACAA37D /* EncryptedValue.swift in Sources */,
 				95E05966437433A8DB789E6B /* Entry.swift in Sources */,
 				061D9633EA17E3209A3B1B44 /* FaviconService.swift in Sources */,
 				2C7ED41E165C57037E5F6F06 /* Group.swift in Sources */,
@@ -553,6 +561,7 @@
 				54328D9A250B18ED2317E2FB /* AutoLockTests.swift in Sources */,
 				2925BEF7334B1A39784CA5F1 /* CredentialMatcherTests.swift in Sources */,
 				64673414C1434500302E97E8 /* DatabaseViewModelTests.swift in Sources */,
+				7E41BC21C10C6D60C27C22DE /* EncryptedValueTests.swift in Sources */,
 				29AFD209A654EAEB36105DA4 /* FaviconServiceTests.swift in Sources */,
 				07A16BF71717EDF0B460697F /* KDBXParserTests.swift in Sources */,
 				E334E6B9CF58BFF29EC50139 /* ModelLogicTests.swift in Sources */,
@@ -573,6 +582,7 @@
 				089FD935F8ED9AE87A519239 /* CredentialMatcher.swift in Sources */,
 				D64C0F898BA4FD7440AEC398 /* DatabaseViewModel.swift in Sources */,
 				7D54BB5FDFD2C5A69370AC6F /* DocumentPickerService.swift in Sources */,
+				62A687CC49BAC4A84F5E9A3C /* EncryptedValue.swift in Sources */,
 				7844FEA590BAD4372335C5DB /* Entry.swift in Sources */,
 				705124D91DF00179DAC44510 /* EntryDetailView.swift in Sources */,
 				C060B8AF23B7362C2D7A4B1E /* EntryListView.swift in Sources */,

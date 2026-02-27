@@ -62,7 +62,7 @@ struct DatabaseNavigationView: View {
                 GroupListView(group: group, viewModel: viewModel)
             }
             .navigationDestination(for: KPEntry.self) { entry in
-                EntryDetailView(entry: entry)
+                EntryDetailView(entry: entry, sessionKey: viewModel.sessionKey!)
             }
         }
     }

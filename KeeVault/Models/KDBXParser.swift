@@ -92,12 +92,12 @@ enum KDBXParser {
     // MARK: - Public API
 
     /// Parse and decrypt a KDBX 4.x file, returning the root group
-    static func parse(data: Data, password: String) throws -> KPGroup {
+    static func parse(data: Data, password: String, sessionKey: SymmetricKey) throws -> KPGroup {
         let compositeKey = KDBXCrypto.compositeKey(password: password)
-        return try parse(data: data, compositeKey: compositeKey)
+        return try parse(data: data, compositeKey: compositeKey, sessionKey: sessionKey)
     }
 
-    static func parse(data: Data, compositeKey: Data) throws -> KPGroup {
+    static func parse(data: Data, compositeKey: Data, sessionKey: SymmetricKey) throws -> KPGroup {
         var reader = DataReader(data: data)
 
         // 1. Verify signatures
@@ -217,7 +217,8 @@ enum KDBXParser {
         let root = try parseXML(
             xmlData: xmlData,
             innerStreamKey: innerHeader.streamKey,
-            innerStreamID: innerHeader.streamID
+            innerStreamID: innerHeader.streamID,
+            sessionKey: sessionKey
         )
 
         return root
@@ -411,11 +412,12 @@ enum KDBXParser {
 
     // MARK: - XML Parsing
 
-    private static func parseXML(xmlData: Data, innerStreamKey: Data, innerStreamID: UInt32) throws -> KPGroup {
+    private static func parseXML(xmlData: Data, innerStreamKey: Data, innerStreamID: UInt32, sessionKey: SymmetricKey) throws -> KPGroup {
         let parser = KDBXXMLParser(
             data: xmlData,
             innerStreamKey: innerStreamKey,
-            innerStreamID: innerStreamID
+            innerStreamID: innerStreamID,
+            sessionKey: sessionKey
         )
         return try parser.parse()
     }
@@ -504,6 +506,7 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
     private let data: Data
     private let innerStreamKey: Data
     private let innerStreamID: UInt32
+    private let sessionKey: SymmetricKey
 
     private var groupStack: [KPGroup] = []
     private var currentEntry: EntryBuilder?
@@ -542,10 +545,11 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
     private var groupCreationTimes: [Date?] = []
     private var groupLastModificationTimes: [Date?] = []
 
-    init(data: Data, innerStreamKey: Data, innerStreamID: UInt32) {
+    init(data: Data, innerStreamKey: Data, innerStreamID: UInt32, sessionKey: SymmetricKey) {
         self.data = data
         self.innerStreamKey = innerStreamKey
         self.innerStreamID = innerStreamID
+        self.sessionKey = sessionKey
     }
 
     func parse() throws -> KPGroup {
@@ -647,7 +651,7 @@ final class KDBXXMLParser: NSObject, XMLParserDelegate {
 
         case "Entry":
             if !isInsideHistory(), let builder = currentEntry {
-                let entry = builder.build()
+                let entry = builder.build(sessionKey: sessionKey)
                 if currentGroupEntries.isEmpty {
                     rootEntries.append(entry)
                 } else {
@@ -881,12 +885,13 @@ private class EntryBuilder {
     var creationTime: Date?
     var lastModificationTime: Date?
 
-    func build() -> KPEntry {
-        let totpConfig = buildTOTPConfig()
+    func build(sessionKey: SymmetricKey) -> KPEntry {
+        let encryptedPassword = (try? EncryptedValue.encrypt(password, using: sessionKey)) ?? .empty
+        let totpConfig = buildTOTPConfig(sessionKey: sessionKey)
         return KPEntry(
             title: title,
             username: username,
-            password: password,
+            password: encryptedPassword,
             url: url,
             notes: notes,
             iconID: iconID,
@@ -898,33 +903,35 @@ private class EntryBuilder {
         )
     }
 
-    private func buildTOTPConfig() -> TOTPConfig? {
+    private func buildTOTPConfig(sessionKey: SymmetricKey) -> TOTPConfig? {
         // otpauth:// URI (KeePassXC standard)
         if let otpURL, otpURL.hasPrefix("otpauth://") {
-            return parseTOTPFromURI(otpURL)
+            return parseTOTPFromURI(otpURL, sessionKey: sessionKey)
         }
 
         // KeePassXC TimeOtp fields
         if let secret = customFields["TimeOtp-Secret-Base32"], !secret.isEmpty {
+            let encryptedSecret = (try? EncryptedValue.encrypt(secret, using: sessionKey)) ?? .empty
             let period = Int(customFields["TimeOtp-Period"] ?? "30") ?? 30
             let digits = Int(customFields["TimeOtp-Length"] ?? "6") ?? 6
             let algo = TOTPAlgorithm(rawValue: customFields["TimeOtp-Algorithm"] ?? "SHA1") ?? .sha1
-            return TOTPConfig(secret: secret, period: period, digits: digits, algorithm: algo)
+            return TOTPConfig(secret: encryptedSecret, period: period, digits: digits, algorithm: algo)
         }
 
         // Legacy TOTP Seed / TOTP Settings
         if let seed = customFields["TOTP Seed"], !seed.isEmpty {
+            let encryptedSeed = (try? EncryptedValue.encrypt(seed, using: sessionKey)) ?? .empty
             let settings = customFields["TOTP Settings"] ?? "30;6"
             let parts = settings.components(separatedBy: ";")
             let period = Int(parts.first ?? "30") ?? 30
             let digits = Int(parts.count > 1 ? parts[1] : "6") ?? 6
-            return TOTPConfig(secret: seed, period: period, digits: digits)
+            return TOTPConfig(secret: encryptedSeed, period: period, digits: digits)
         }
 
         return nil
     }
 
-    private func parseTOTPFromURI(_ uri: String) -> TOTPConfig? {
+    private func parseTOTPFromURI(_ uri: String, sessionKey: SymmetricKey) -> TOTPConfig? {
         guard let components = URLComponents(string: uri) else { return nil }
         let params = Dictionary(uniqueKeysWithValues:
             (components.queryItems ?? []).compactMap { item in
@@ -933,10 +940,11 @@ private class EntryBuilder {
         )
 
         guard let secret = params["secret"] else { return nil }
+        let encryptedSecret = (try? EncryptedValue.encrypt(secret, using: sessionKey)) ?? .empty
         let period = Int(params["period"] ?? "30") ?? 30
         let digits = Int(params["digits"] ?? "6") ?? 6
         let algorithm = TOTPAlgorithm(rawValue: (params["algorithm"] ?? "SHA1").uppercased()) ?? .sha1
 
-        return TOTPConfig(secret: secret, period: period, digits: digits, algorithm: algorithm)
+        return TOTPConfig(secret: encryptedSecret, period: period, digits: digits, algorithm: algorithm)
     }
 }

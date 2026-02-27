@@ -1,24 +1,31 @@
+import CryptoKit
 import XCTest
 @testable import KeeVault
 
 final class TOTPGeneratorTests: XCTestCase {
+    private let testKey = SymmetricKey(size: .bits256)
+
+    private func encryptSecret(_ secret: String) -> EncryptedValue {
+        try! EncryptedValue.encrypt(secret, using: testKey)
+    }
+
     func testGenerateCodeSHA1RFC6238Vector() {
         let config = TOTPConfig(
-            secret: "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+            secret: encryptSecret("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"),
             period: 30,
             digits: 8,
             algorithm: .sha1
         )
 
-        let code = TOTPGenerator.generateCode(config: config, date: Date(timeIntervalSince1970: 59))
+        let code = TOTPGenerator.generateCode(config: config, sessionKey: testKey, date: Date(timeIntervalSince1970: 59))
 
         XCTAssertEqual(code, "94287082")
     }
 
     func testGenerateCodeReturnsPlaceholderForInvalidBase32Secret() {
-        let config = TOTPConfig(secret: "not_base32***", period: 30, digits: 6, algorithm: .sha1)
+        let config = TOTPConfig(secret: encryptSecret("not_base32***"), period: 30, digits: 6, algorithm: .sha1)
 
-        let code = TOTPGenerator.generateCode(config: config, date: Date(timeIntervalSince1970: 1_700_000_000))
+        let code = TOTPGenerator.generateCode(config: config, sessionKey: testKey, date: Date(timeIntervalSince1970: 1_700_000_000))
 
         XCTAssertEqual(code, "------")
     }

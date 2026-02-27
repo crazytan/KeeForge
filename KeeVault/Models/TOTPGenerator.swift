@@ -5,8 +5,9 @@ import CryptoKit
 enum TOTPGenerator {
 
     /// Generate a TOTP code for the given config at the current time
-    static func generateCode(config: TOTPConfig, date: Date = Date()) -> String {
-        guard let secretData = base32Decode(config.secret) else { return "------" }
+    static func generateCode(config: TOTPConfig, sessionKey: SymmetricKey, date: Date = Date()) -> String {
+        guard let secretString = try? config.secret.decrypt(using: sessionKey),
+              let secretData = base32Decode(secretString) else { return "------" }
 
         let timeInterval = UInt64(date.timeIntervalSince1970)
         let counter = timeInterval / UInt64(config.period)

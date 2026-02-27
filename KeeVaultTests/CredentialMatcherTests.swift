@@ -170,6 +170,8 @@ final class CredentialMatcherTests: XCTestCase {
     // MARK: - Helpers
 
     private func makeEntry(title: String, url: String, username: String, password: String, customFields: [String: String] = [:]) -> KPEntry {
-        KPEntry(title: title, username: username, password: password, url: url, customFields: customFields)
+        // Use a non-empty sentinel for hasPassword checks; actual decryption is not tested here
+        let encrypted: EncryptedValue = password.isEmpty ? .empty : EncryptedValue(sealedData: Data([0]), hasValue: true)
+        return KPEntry(title: title, username: username, password: encrypted, url: url, customFields: customFields)
     }
 }

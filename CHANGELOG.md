@@ -9,8 +9,7 @@
 - (none currently)
 
 ### Security (from SECURITY_AUDIT.md)
-- [ ] **HIGH-1:** Zero cryptographic keys from memory after use (SecureBytes wrapper with `memset_s` in deinit)
-- [ ] **HIGH-2:** Replace `String` with `SecureString` for passwords/TOTP secrets (lazy decrypt on demand)
+- [x] **HIGH-1/2:** Lazy decrypt — passwords and TOTP secrets held as AES-GCM `EncryptedValue` in memory, decrypted on demand only (copy, reveal, AutoFill, TOTP generation). Session key nilled on lock.
 - [ ] **MEDIUM-1:** Switch favicon provider from Google to DuckDuckGo (privacy)
 - [ ] **MEDIUM-5:** Filter internal/private domain names from favicon fetching
 - [ ] **LOW-2:** Add exponential backoff after failed password attempts
@@ -23,7 +22,10 @@
 
 ## Unreleased
 
-*(nothing yet)*
+### Security
+- Passwords and TOTP secrets now stored as AES-GCM encrypted `EncryptedValue` in memory (lazy decrypt on demand)
+- Per-session symmetric key generated at unlock, destroyed on lock
+- Plaintext secrets only exist in transient local variables at point of use (copy, reveal, TOTP generation)
 
 ## v1.2.0 (2026-02-26)
 

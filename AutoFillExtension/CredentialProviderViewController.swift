@@ -1,10 +1,12 @@
 import AuthenticationServices
+import CryptoKit
 import UIKit
 
 @MainActor
 final class CredentialProviderViewController: ASCredentialProviderViewController {
     private var serviceIdentifiers: [ASCredentialServiceIdentifier] = []
     private var parsedEntries: [KPEntry] = []
+    private var sessionKey: SymmetricKey?
     private var isUnlockInProgress = false
     private var didAttemptAutoBiometricUnlock = false
 
@@ -134,18 +136,21 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
 
         let data = try readSecurityScoped(url: url)
+        let key = SymmetricKey(size: .bits256)
 
         let root = try await Task.detached {
             if let password {
-                return try KDBXParser.parse(data: data, password: password)
+                return try KDBXParser.parse(data: data, password: password, sessionKey: key)
             }
 
             guard let compositeKey else {
                 throw NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.failed.rawValue)
             }
 
-            return try KDBXParser.parse(data: data, compositeKey: compositeKey)
+            return try KDBXParser.parse(data: data, compositeKey: compositeKey, sessionKey: key)
         }.value
+
+        self.sessionKey = key
 
         let allEntries: [KPEntry]
         if let recycleBinID = root.recycleBinUUID {
@@ -153,7 +158,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         } else {
             allEntries = root.allEntries
         }
-        parsedEntries = allEntries.filter { !$0.password.isEmpty }
+        parsedEntries = allEntries.filter { $0.hasPassword }
     }
 
     private func readSecurityScoped(url: URL) throws -> Data {
@@ -207,13 +212,16 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             return
         }
 
+        let decryptedPassword = (try? entry.password.decrypt(using: sessionKey!)) ?? ""
         parsedEntries = []
-        let credential = ASPasswordCredential(user: user, password: entry.password)
+        sessionKey = nil
+        let credential = ASPasswordCredential(user: user, password: decryptedPassword)
         extensionContext.completeRequest(withSelectedCredential: credential, completionHandler: nil)
     }
 
     private func cancelRequest(code: ASExtensionError.Code) {
         parsedEntries = []
+        sessionKey = nil
         extensionContext.cancelRequest(withError: ASExtensionError(code))
     }
 

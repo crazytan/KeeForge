@@ -1,10 +1,17 @@
+import CryptoKit
 import XCTest
 @testable import KeeVault
 
 @MainActor
 final class TOTPViewModelTests: XCTestCase {
+    private let testKey = SymmetricKey(size: .bits256)
+
+    private func encryptSecret(_ secret: String) -> EncryptedValue {
+        try! EncryptedValue.encrypt(secret, using: testKey)
+    }
+
     func testInitComputesInitialCodeAndTimingValues() {
-        let vm = TOTPViewModel(config: TOTPConfig(secret: "JBSWY3DPEHPK3PXP", period: 30, digits: 6, algorithm: .sha1))
+        let vm = TOTPViewModel(config: TOTPConfig(secret: encryptSecret("JBSWY3DPEHPK3PXP"), period: 30, digits: 6, algorithm: .sha1), sessionKey: testKey)
 
         XCTAssertEqual(vm.period, 30)
         XCTAssertNotEqual(vm.code, "------")
@@ -13,7 +20,7 @@ final class TOTPViewModelTests: XCTestCase {
     }
 
     func testStartAndStopCanBeCalledRepeatedly() {
-        let vm = TOTPViewModel(config: TOTPConfig(secret: "JBSWY3DPEHPK3PXP"))
+        let vm = TOTPViewModel(config: TOTPConfig(secret: encryptSecret("JBSWY3DPEHPK3PXP")), sessionKey: testKey)
 
         vm.start()
         vm.stop()

@@ -1,8 +1,10 @@
+import CryptoKit
 import XCTest
 @testable import KeeVault
 
 final class KDBXParserTests: XCTestCase {
     private let fixturePassword = "testpassword123"
+    private let testSessionKey = SymmetricKey(size: .bits256)
 
     // MARK: - Fixture Expectations
 
@@ -123,7 +125,8 @@ final class KDBXParserTests: XCTestCase {
         for expected in Expected.entries {
             let entry = entries.first { $0.title == expected.title }
             XCTAssertNotNil(entry, "Entry not found: \(expected.title)")
-            XCTAssertEqual(entry?.password, expected.password,
+            let decrypted = try entry?.password.decrypt(using: testSessionKey)
+            XCTAssertEqual(decrypted, expected.password,
                            "\(expected.title): password mismatch — inner stream decryption may be broken")
         }
     }
@@ -163,7 +166,8 @@ final class KDBXParserTests: XCTestCase {
             XCTAssertNotNil(entry, "Entry not found: \(expected.title)")
             XCTAssertNotNil(entry?.totpConfig,
                             "\(expected.title): expected TOTP config but got nil")
-            XCTAssertEqual(entry?.totpConfig?.secret, expected.totpSecret,
+            let decryptedSecret = try entry?.totpConfig?.secret.decrypt(using: testSessionKey)
+            XCTAssertEqual(decryptedSecret, expected.totpSecret,
                            "\(expected.title): TOTP secret mismatch")
         }
     }
@@ -232,7 +236,7 @@ final class KDBXParserTests: XCTestCase {
         let root = try parseFixture()
         let entry = root.allEntries.first { $0.title == "Public Profile" }
         XCTAssertNotNil(entry)
-        XCTAssertEqual(entry?.password, "")
+        XCTAssertEqual(entry?.hasPassword, false)
     }
 
     func testUnicodeEntryFieldsParsedCorrectly() throws {
@@ -240,7 +244,8 @@ final class KDBXParserTests: XCTestCase {
         let entry = root.allEntries.first { $0.title == "日本語テスト 🔑" }
         XCTAssertNotNil(entry)
         XCTAssertEqual(entry?.username, "ユーザー")
-        XCTAssertEqual(entry?.password, "pässwörd!@#¥")
+        let decrypted = try entry?.password.decrypt(using: testSessionKey)
+        XCTAssertEqual(decrypted, "pässwörd!@#¥")
     }
 
     // MARK: - KP2A Additional URLs
@@ -321,9 +326,9 @@ final class KDBXParserTests: XCTestCase {
     func testCompositeKeyPathMatchesPasswordPath() throws {
         let data = try fixtureData()
 
-        let parsedWithPassword = try KDBXParser.parse(data: data, password: fixturePassword)
+        let parsedWithPassword = try KDBXParser.parse(data: data, password: fixturePassword, sessionKey: testSessionKey)
         let compositeKey = KDBXCrypto.compositeKey(password: fixturePassword)
-        let parsedWithCompositeKey = try KDBXParser.parse(data: data, compositeKey: compositeKey)
+        let parsedWithCompositeKey = try KDBXParser.parse(data: data, compositeKey: compositeKey, sessionKey: testSessionKey)
 
         XCTAssertEqual(
             allGroupNames(in: parsedWithPassword),
@@ -336,7 +341,7 @@ final class KDBXParserTests: XCTestCase {
 
     private func parseFixture() throws -> KPGroup {
         let data = try fixtureData()
-        return try KDBXParser.parse(data: data, password: fixturePassword)
+        return try KDBXParser.parse(data: data, password: fixturePassword, sessionKey: testSessionKey)
     }
 
     private func fixtureData() throws -> Data {

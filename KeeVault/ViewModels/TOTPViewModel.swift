@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 @MainActor
@@ -8,12 +9,14 @@ final class TOTPViewModel {
     private(set) var progress: Double = 1.0
 
     private let config: TOTPConfig
+    private let sessionKey: SymmetricKey
     private var timer: Timer?
 
     var period: Int { config.period }
 
-    init(config: TOTPConfig) {
+    init(config: TOTPConfig, sessionKey: SymmetricKey) {
         self.config = config
+        self.sessionKey = sessionKey
         refresh()
     }
 
@@ -33,7 +36,7 @@ final class TOTPViewModel {
 
     private func refresh() {
         let now = Date()
-        code = TOTPGenerator.generateCode(config: config, date: now)
+        code = TOTPGenerator.generateCode(config: config, sessionKey: sessionKey, date: now)
         secondsRemaining = TOTPGenerator.secondsRemaining(period: config.period, date: now)
         progress = Double(secondsRemaining) / Double(config.period)
     }

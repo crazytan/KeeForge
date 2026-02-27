@@ -17,6 +17,7 @@ KeeVault/
 │   ├── KDBXCrypto.swift           # AES-256, ChaCha20, HMAC-SHA256, Argon2, gzip
 │   ├── Group.swift                # KPGroup model (tree of groups + entries)
 │   ├── Entry.swift                # KPEntry model (title, username, password, URLs, TOTP)
+│   ├── EncryptedValue.swift       # AES-GCM wrapper for in-memory secret protection
 │   └── TOTPGenerator.swift        # RFC 6238 TOTP generation
 ├── ViewModels/
 │   ├── DatabaseViewModel.swift    # Main VM: unlock, lock, search, sort, state machine
@@ -55,12 +56,14 @@ TestFixtures/test.kdbx  # Test database
 ## Data Flow
 
 ```
-.kdbx file → KDBXParser.parse(data:compositeKey:)
+.kdbx file → KDBXParser.parse(data:compositeKey:sessionKey:)
   → Decrypts binary (AES/ChaCha20 + Argon2 key derivation)
   → Decompresses (gzip)
   → Parses XML → KPGroup tree (with recycleBinUUID on root)
-  → DatabaseViewModel stores rootGroup
-  → Views render from rootGroup
+  → Passwords & TOTP secrets re-encrypted with sessionKey as EncryptedValue (AES-GCM)
+  → DatabaseViewModel stores rootGroup + sessionKey
+  → Views decrypt on demand (copy, reveal, TOTP generation)
+  → On lock: sessionKey nilled, EncryptedValues become undecryptable
 ```
 
 ## Key Patterns
@@ -92,6 +95,8 @@ TestFixtures/test.kdbx  # Test database
 
 ## Security
 
+- **Lazy decrypt:** Passwords and TOTP secrets are stored as `EncryptedValue` (AES-GCM sealed data) in memory, not plaintext `String`. A per-session `SymmetricKey` is generated at unlock and passed through the parser. Secrets are only decrypted into transient local variables at the point of use (copy, reveal, AutoFill, TOTP generation). The session key is nilled on lock, making all `EncryptedValue`s undecryptable.
+- `EncryptedValue.hasValue` allows checking emptiness without decrypting (e.g. `entry.hasPassword`)
 - Composite key stored in Keychain with biometric access control
 - Never store raw master password
 - Auto-lock on background, clear sensitive state

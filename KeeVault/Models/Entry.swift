@@ -5,7 +5,7 @@ struct KPEntry: Identifiable, Sendable {
     let id: UUID
     let title: String
     let username: String
-    let password: String
+    let password: EncryptedValue
     let url: String
     let notes: String
     let iconID: Int
@@ -16,11 +16,14 @@ struct KPEntry: Identifiable, Sendable {
     let creationTime: Date?
     let lastModificationTime: Date?
 
+    /// Whether the entry has a non-empty password (without decrypting).
+    var hasPassword: Bool { password.hasValue }
+
     init(
         id: UUID = UUID(),
         title: String = "",
         username: String = "",
-        password: String = "",
+        password: EncryptedValue = .empty,
         url: String = "",
         notes: String = "",
         iconID: Int = 0,
@@ -66,12 +69,12 @@ struct KPEntry: Identifiable, Sendable {
 
 /// TOTP configuration extracted from KeePass entry
 struct TOTPConfig: Sendable {
-    let secret: String
+    let secret: EncryptedValue
     let period: Int
     let digits: Int
     let algorithm: TOTPAlgorithm
 
-    init(secret: String, period: Int = 30, digits: Int = 6, algorithm: TOTPAlgorithm = .sha1) {
+    init(secret: EncryptedValue, period: Int = 30, digits: Int = 6, algorithm: TOTPAlgorithm = .sha1) {
         self.secret = secret
         self.period = period
         self.digits = digits
