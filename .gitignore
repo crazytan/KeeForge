@@ -34,3 +34,5 @@ fastlane/screenshots/**/*.png
 *.xcuserstate
 TestResults/
 .claude/
+.env
+.venv/
