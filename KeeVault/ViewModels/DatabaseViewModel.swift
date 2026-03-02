@@ -179,6 +179,8 @@ final class DatabaseViewModel {
             if BiometricService.isAvailable {
                 try? KeychainService.storeCompositeKey(compositeKey, for: url.path)
             }
+
+            populateCredentialStoreIfNeeded(root: root)
         } catch {
             if isUITesting {
                 Self.diagnostic("unlock: failed with error '\(error.localizedDescription)'")
@@ -211,6 +213,8 @@ final class DatabaseViewModel {
             self.sessionKey = sessionKey
             state = .unlocked
             startInactivityTimer()
+
+            populateCredentialStoreIfNeeded(root: root)
         } catch {
             state = .error(error.localizedDescription)
         }
@@ -327,6 +331,26 @@ final class DatabaseViewModel {
 
     private static func saveSortOrder(_ order: SortOrder) {
         UserDefaults.standard.set(order.rawValue, forKey: sortOrderKey)
+    }
+
+    // MARK: - Credential Identity Store
+
+    func populateCredentialStoreIfUnlocked() {
+        guard let root = rootGroup else { return }
+        populateCredentialStoreIfNeeded(root: root)
+    }
+
+    private func populateCredentialStoreIfNeeded(root: KPGroup) {
+        guard SettingsService.quickAutoFillEnabled else { return }
+
+        let entries: [KPEntry]
+        if let recycleBinID = root.recycleBinUUID {
+            entries = root.allEntries(excludingGroupID: recycleBinID)
+        } else {
+            entries = root.allEntries
+        }
+        let withPasswords = entries.filter { $0.hasPassword }
+        CredentialIdentityStoreManager.populate(with: withPasswords)
     }
 
     private static func diagnostic(_ message: String) {

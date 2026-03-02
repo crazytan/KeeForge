@@ -9,6 +9,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private var sessionKey: SymmetricKey?
     private var isUnlockInProgress = false
     private var didAttemptAutoBiometricUnlock = false
+    private var targetRecordIdentifier: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,18 +18,58 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
         self.serviceIdentifiers = serviceIdentifiers
+        targetRecordIdentifier = nil
         didAttemptAutoBiometricUnlock = false
         presentUnlockPromptIfNeeded()
     }
 
     override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
         serviceIdentifiers = [credentialIdentity.serviceIdentifier]
+        targetRecordIdentifier = credentialIdentity.recordIdentifier
         didAttemptAutoBiometricUnlock = false
         presentUnlockPromptIfNeeded()
     }
 
     override func provideCredentialWithoutUserInteraction(for credentialIdentity: ASPasswordCredentialIdentity) {
-        extensionContext.cancelRequest(withError: ASExtensionError(.userInteractionRequired))
+        guard SettingsService.quickAutoFillEnabled else {
+            extensionContext.cancelRequest(withError: ASExtensionError(.userInteractionRequired))
+            return
+        }
+
+        guard canUseBiometrics else {
+            extensionContext.cancelRequest(withError: ASExtensionError(.userInteractionRequired))
+            return
+        }
+
+        let recordIdentifier = credentialIdentity.recordIdentifier
+
+        Task {
+            do {
+                guard let url = SharedVaultStore.loadBookmarkedURL() else {
+                    throw ASExtensionError(.failed)
+                }
+
+                let context = try await BiometricService.authenticate(reason: "AutoFill with KeeVault")
+                let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
+                try await loadEntries(password: nil, compositeKey: compositeKey)
+
+                if let recordIdentifier, let entry = findEntry(byRecordIdentifier: recordIdentifier) {
+                    completeRequest(with: entry)
+                } else {
+                    let matches = CredentialMatcher.matchedEntries(
+                        from: parsedEntries,
+                        for: [credentialIdentity.serviceIdentifier]
+                    )
+                    if let entry = matches.first {
+                        completeRequest(with: entry)
+                    } else {
+                        cancelRequest(code: .credentialIdentityNotFound)
+                    }
+                }
+            } catch {
+                extensionContext.cancelRequest(withError: ASExtensionError(.userInteractionRequired))
+            }
+        }
     }
 
     override func prepareInterfaceForExtensionConfiguration() {
@@ -170,6 +211,12 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     }
 
     private func presentMatchesOrFinish() {
+        // If we have a target recordIdentifier from QuickType, jump directly to that entry
+        if let recordIdentifier = targetRecordIdentifier, let entry = findEntry(byRecordIdentifier: recordIdentifier) {
+            completeRequest(with: entry)
+            return
+        }
+
         let matches = CredentialMatcher.matchedEntries(from: parsedEntries, for: serviceIdentifiers)
 
         if matches.isEmpty {
@@ -183,6 +230,11 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
 
         presentEntryPicker(entries: matches)
+    }
+
+    private func findEntry(byRecordIdentifier recordIdentifier: String) -> KPEntry? {
+        guard let targetUUID = UUID(uuidString: recordIdentifier) else { return nil }
+        return parsedEntries.first { $0.id == targetUUID }
     }
 
     private func presentEntryPicker(entries: [KPEntry]) {
@@ -215,6 +267,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         let decryptedPassword = (try? entry.password.decrypt(using: sessionKey!)) ?? ""
         parsedEntries = []
         sessionKey = nil
+        targetRecordIdentifier = nil
         let credential = ASPasswordCredential(user: user, password: decryptedPassword)
         extensionContext.completeRequest(withSelectedCredential: credential, completionHandler: nil)
     }
@@ -222,6 +275,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private func cancelRequest(code: ASExtensionError.Code) {
         parsedEntries = []
         sessionKey = nil
+        targetRecordIdentifier = nil
         extensionContext.cancelRequest(withError: ASExtensionError(code))
     }
 
