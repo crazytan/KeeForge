@@ -5,6 +5,7 @@ final class SettingsServiceTests: XCTestCase {
     private let autoLockKey = "KeeVault.autoLockTimeout"
     private let clipboardKey = "KeeVault.clipboardTimeout"
     private let autoUnlockWithFaceIDKey = "KeeVault.autoUnlockWithFaceID"
+    private let quickAutoFillEnabledKey = "KeeVault.quickAutoFillEnabled"
 
     private var sharedDefaults: UserDefaults {
         UserDefaults(suiteName: SharedVaultStore.appGroupID) ?? .standard
@@ -15,6 +16,7 @@ final class SettingsServiceTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: clipboardKey)
         UserDefaults.standard.removeObject(forKey: autoUnlockWithFaceIDKey)
         sharedDefaults.removeObject(forKey: autoUnlockWithFaceIDKey)
+        sharedDefaults.removeObject(forKey: quickAutoFillEnabledKey)
         super.tearDown()
     }
 
@@ -85,5 +87,28 @@ final class SettingsServiceTests: XCTestCase {
     func testClipboardTimeoutFallsBackOnInvalidValue() {
         UserDefaults.standard.set("bogus", forKey: clipboardKey)
         XCTAssertEqual(SettingsService.clipboardTimeout, .thirtySeconds)
+    }
+
+    // MARK: - Quick AutoFill
+
+    func testQuickAutoFillEnabledDefaultsToFalse() {
+        sharedDefaults.removeObject(forKey: quickAutoFillEnabledKey)
+        XCTAssertFalse(SettingsService.quickAutoFillEnabled)
+    }
+
+    func testQuickAutoFillEnabledPersists() {
+        SettingsService.quickAutoFillEnabled = true
+        XCTAssertTrue(SettingsService.quickAutoFillEnabled)
+
+        SettingsService.quickAutoFillEnabled = false
+        XCTAssertFalse(SettingsService.quickAutoFillEnabled)
+    }
+
+    func testQuickAutoFillEnabledUsesSharedDefaults() {
+        SettingsService.quickAutoFillEnabled = true
+        XCTAssertTrue(sharedDefaults.bool(forKey: quickAutoFillEnabledKey))
+
+        SettingsService.quickAutoFillEnabled = false
+        XCTAssertFalse(sharedDefaults.bool(forKey: quickAutoFillEnabledKey))
     }
 }

@@ -72,6 +72,7 @@ targets:
       - path: KeeVault/Services/SettingsService.swift
       - path: KeeVault/Services/SharedVaultStore.swift
       - path: KeeVault/Services/CredentialMatcher.swift
+      - path: KeeVault/Services/CredentialIdentityStoreManager.swift
       - path: KeeVault/Services/FaviconService.swift
 
   KeeVaultUITests:
