@@ -8,6 +8,7 @@ enum SettingsService {
         static let clipboardTimeout = "KeeVault.clipboardTimeout"
         static let autoUnlockWithFaceID = "KeeVault.autoUnlockWithFaceID"
         static let showWebsiteIcons = "KeeVault.showWebsiteIcons"
+        static let quickAutoFillEnabled = "KeeVault.quickAutoFillEnabled"
     }
 
     private static var sharedDefaults: UserDefaults {
@@ -91,6 +92,15 @@ enum SettingsService {
         }
         set {
             sharedDefaults.set(newValue, forKey: Key.showWebsiteIcons)
+        }
+    }
+
+    static var quickAutoFillEnabled: Bool {
+        get {
+            sharedDefaults.bool(forKey: Key.quickAutoFillEnabled)
+        }
+        set {
+            sharedDefaults.set(newValue, forKey: Key.quickAutoFillEnabled)
         }
     }
 }

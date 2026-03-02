@@ -8,12 +8,15 @@ struct SettingsView: View {
     @State private var clipboardTimeout = SettingsService.clipboardTimeout
     @State private var autoUnlockWithFaceID = SettingsService.autoUnlockWithFaceID
     @State private var showWebsiteIcons = SettingsService.showWebsiteIcons
+    @State private var quickAutoFillEnabled = SettingsService.quickAutoFillEnabled
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Security") {
+                Section {
                     Toggle("Auto-Unlock with Face ID", isOn: $autoUnlockWithFaceID)
+
+                    Toggle("Quick AutoFill", isOn: $quickAutoFillEnabled)
 
                     Picker("Auto-Lock Timeout", selection: $autoLockTimeout) {
                         ForEach(SettingsService.AutoLockTimeout.allCases, id: \.self) { option in
@@ -25,6 +28,12 @@ struct SettingsView: View {
                         ForEach(SettingsService.ClipboardTimeout.allCases, id: \.self) { option in
                             Text(option.rawValue).tag(option)
                         }
+                    }
+                } header: {
+                    Text("Security")
+                } footer: {
+                    if quickAutoFillEnabled {
+                        Text("Credential suggestions appear in the keyboard bar. Requires Face ID to unlock when tapped.")
                     }
                 }
 
@@ -77,6 +86,14 @@ struct SettingsView: View {
             }
             .onChange(of: showWebsiteIcons) { _, newValue in
                 SettingsService.showWebsiteIcons = newValue
+            }
+            .onChange(of: quickAutoFillEnabled) { _, newValue in
+                SettingsService.quickAutoFillEnabled = newValue
+                if newValue {
+                    viewModel.populateCredentialStoreIfUnlocked()
+                } else {
+                    CredentialIdentityStoreManager.clearStore()
+                }
             }
         }
     }
