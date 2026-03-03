@@ -215,7 +215,10 @@ struct URLFieldRow: View {
                         openURL(link)
                     } label: {
                         Image(systemName: "arrow.up.right.square")
+                            .font(.body)
                     }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                     .buttonStyle(.borderless)
                     .accessibilityIdentifier("entry.url.open")
                 }
