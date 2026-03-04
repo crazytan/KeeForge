@@ -21,27 +21,28 @@
 - iPad-native layout
 - Sync / attachments
 
-## Unreleased
+## v1.3.0 (2026-03-03)
 
-### Changes
-- Renamed app display name from KeeVault to KeeForge (bundle IDs and internal identifiers unchanged)
-- Renamed all internal KeeVault references to KeeForge (folders, files, structs, scheme, module name, settings keys)
+### New Features
+- **QuickType AutoFill** — credential suggestions appear in the keyboard bar in Safari. Tap to autofill with Face ID, no full AutoFill popup needed. Toggle in Settings → Quick AutoFill.
 
-### Features
-- **QuickType AutoFill** — credential suggestions appear in the keyboard bar in Safari. Tap to autofill with Face ID, no full AutoFill popup needed. Toggle in Settings → Security → Quick AutoFill.
-
-### Changes
-- License changed to GPLv3
-- Moved SECURITY_AUDIT.md to docs/
-- EU App Store availability enabled (DSA trader status submitted)
-
+### Fixes
+- Fixed QuickType domain extraction — www-stripping, subdomain collapsing, multi-part TLD support (e.g. `login.facebook.com` → `facebook.com`, `bbc.co.uk` handled correctly)
+- Fixed AutoFill Face ID timing — biometric now deferred until view is presented, resolving "User interaction required" error on QuickType tap
+- Increased tap targets for view/copy/open URL buttons in entry detail (44pt minimum per Apple HIG)
 
 ### Security
-- Switched favicon provider from Google to DuckDuckGo (prevents Google tracking favicon requests)
-- Private/internal domains (RFC 1918 IPs, .local/.corp/.internal TLDs, single-label hostnames, etc.) are now filtered from favicon fetching to prevent hostname leakage
-- Passwords and TOTP secrets now stored as AES-GCM encrypted `EncryptedValue` in memory (lazy decrypt on demand)
-- Per-session symmetric key generated at unlock, destroyed on lock
-- Plaintext secrets only exist in transient local variables at point of use (copy, reveal, TOTP generation)
+- Hardened KDBX parser: `DataReader` now throws on truncated data instead of silently truncating
+- Bounded Argon2 KDF parameters (iterations, memory, parallelism) to prevent resource exhaustion from malicious files
+- Validated variant-map value lengths before decoding
+
+### Changes
+- Renamed from KeeVault to KeeForge (display name, all internal references, folders, scheme, module name)
+- License changed to GPLv3
+- EU App Store availability enabled
+- Switched favicon provider from Google to DuckDuckGo (privacy)
+- Private/internal domains filtered from favicon fetching
+- Passwords and TOTP secrets stored as AES-GCM `EncryptedValue` in memory (lazy decrypt on demand)
 
 ## v1.2.0 (2026-02-26)
 
