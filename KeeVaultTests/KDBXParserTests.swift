@@ -363,4 +363,263 @@ final class KDBXParserTests: XCTestCase {
         }
         return nil
     }
+
+    // MARK: - Security: Truncated / Malformed File Tests
+
+    func testEmptyDataThrowsTruncated() {
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: Data(), password: "x", sessionKey: testSessionKey)
+        ) { error in
+            XCTAssertEqual(error as? KDBXParser.ParseError, .truncatedFile)
+        }
+    }
+
+    func testTruncatedSignatureThrows() {
+        // Only 6 bytes — not enough for two UInt32 signatures
+        let data = Data([0x03, 0xD9, 0xA2, 0x9A, 0x67, 0xFB])
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            XCTAssertEqual(error as? KDBXParser.ParseError, .truncatedFile)
+        }
+    }
+
+    func testInvalidSignatureThrows() {
+        // 12 bytes: wrong sig1, correct sig2, version 4
+        var data = Data()
+        data.appendLE(UInt32(0xDEADBEEF))
+        data.appendLE(UInt32(0xB54BFB67))
+        data.appendLE(UInt16(1))
+        data.appendLE(UInt16(4))
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            XCTAssertEqual(error as? KDBXParser.ParseError, .invalidSignature)
+        }
+    }
+
+    func testTruncatedAfterVersionThrows() {
+        // Valid signatures + version, but no header fields
+        var data = Data()
+        data.appendLE(UInt32(0x9AA2D903))
+        data.appendLE(UInt32(0xB54BFB67))
+        data.appendLE(UInt16(1))
+        data.appendLE(UInt16(4))
+        // No header data follows — parser should throw truncatedFile
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            // The header parsing loop sees hasMore=false, returns empty header,
+            // then readBytes(32) for storedHeaderSHA fails
+            XCTAssertEqual(error as? KDBXParser.ParseError, .truncatedFile)
+        }
+    }
+
+    func testTruncatedHeaderFieldThrows() {
+        // Valid preamble, then a header field that claims 100 bytes but file ends
+        var data = Data()
+        data.appendLE(UInt32(0x9AA2D903))
+        data.appendLE(UInt32(0xB54BFB67))
+        data.appendLE(UInt16(1))
+        data.appendLE(UInt16(4))
+        data.append(2) // field ID = cipherID
+        data.appendLE(UInt32(100)) // claims 100 bytes
+        data.append(Data(repeating: 0, count: 10)) // only 10 bytes
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            XCTAssertEqual(error as? KDBXParser.ParseError, .truncatedFile)
+        }
+    }
+
+    // MARK: - Security: Argon2 Parameter Bounds Tests
+
+    func testArgon2ExcessiveIterationsRejected() {
+        let data = buildKDBXWithKDFParams(iterations: 999, memory: 64 * 1024 * 1024, parallelism: 1)
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            guard case KDBXParser.ParseError.kdfParameterOutOfRange(let msg) = error else {
+                XCTFail("Expected kdfParameterOutOfRange, got \(error)")
+                return
+            }
+            XCTAssertTrue(msg.contains("iterations"))
+        }
+    }
+
+    func testArgon2ZeroIterationsRejected() {
+        let data = buildKDBXWithKDFParams(iterations: 0, memory: 64 * 1024 * 1024, parallelism: 1)
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            guard case KDBXParser.ParseError.kdfParameterOutOfRange(let msg) = error else {
+                XCTFail("Expected kdfParameterOutOfRange, got \(error)")
+                return
+            }
+            XCTAssertTrue(msg.contains("iterations"))
+        }
+    }
+
+    func testArgon2ExcessiveMemoryRejected() {
+        // 8GB — way over the 4GB limit
+        let data = buildKDBXWithKDFParams(iterations: 3, memory: 8_589_934_592, parallelism: 1)
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            guard case KDBXParser.ParseError.kdfParameterOutOfRange(let msg) = error else {
+                XCTFail("Expected kdfParameterOutOfRange, got \(error)")
+                return
+            }
+            XCTAssertTrue(msg.contains("memory"))
+        }
+    }
+
+    func testArgon2TooSmallMemoryRejected() {
+        // 1 KB — under 8 KB minimum
+        let data = buildKDBXWithKDFParams(iterations: 3, memory: 1024, parallelism: 1)
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            guard case KDBXParser.ParseError.kdfParameterOutOfRange(let msg) = error else {
+                XCTFail("Expected kdfParameterOutOfRange, got \(error)")
+                return
+            }
+            XCTAssertTrue(msg.contains("memory"))
+        }
+    }
+
+    func testArgon2ExcessiveParallelismRejected() {
+        let data = buildKDBXWithKDFParams(iterations: 3, memory: 64 * 1024 * 1024, parallelism: 64)
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            guard case KDBXParser.ParseError.kdfParameterOutOfRange(let msg) = error else {
+                XCTFail("Expected kdfParameterOutOfRange, got \(error)")
+                return
+            }
+            XCTAssertTrue(msg.contains("parallelism"))
+        }
+    }
+
+    func testArgon2ZeroParallelismRejected() {
+        let data = buildKDBXWithKDFParams(iterations: 3, memory: 64 * 1024 * 1024, parallelism: 0)
+        XCTAssertThrowsError(
+            try KDBXParser.parse(data: data, password: "x", sessionKey: testSessionKey)
+        ) { error in
+            guard case KDBXParser.ParseError.kdfParameterOutOfRange(let msg) = error else {
+                XCTFail("Expected kdfParameterOutOfRange, got \(error)")
+                return
+            }
+            XCTAssertTrue(msg.contains("parallelism"))
+        }
+    }
+
+    // MARK: - KDF Test Helpers
+
+    /// Build minimal KDBX data with valid signatures, version, header (including KDF params),
+    /// and correct header SHA-256 so the parser reaches deriveKey() where bounds are checked.
+    private func buildKDBXWithKDFParams(iterations: UInt64, memory: UInt64, parallelism: UInt32) -> Data {
+        var header = Data()
+
+        // Signatures + version
+        header.appendLE(UInt32(0x9AA2D903))
+        header.appendLE(UInt32(0xB54BFB67))
+        header.appendLE(UInt16(1)) // minor
+        header.appendLE(UInt16(4)) // major
+
+        // CipherID field (field 2) — ChaCha20
+        header.append(2) // field ID
+        header.appendLE(UInt32(16)) // size
+        header.append(Data([0xD6, 0x03, 0x8A, 0x2B, 0x8B, 0x6F, 0x4C, 0xB5,
+                            0xA5, 0x24, 0x33, 0x9A, 0x31, 0xDB, 0xB5, 0x9A]))
+
+        // CompressionFlags field (field 3) — no compression
+        header.append(3)
+        header.appendLE(UInt32(4))
+        header.appendLE(UInt32(0))
+
+        // MasterSeed field (field 4) — 32 random bytes
+        header.append(4)
+        header.appendLE(UInt32(32))
+        header.append(Data(repeating: 0xAA, count: 32))
+
+        // EncryptionIV field (field 7) — 12 bytes for ChaCha20
+        header.append(7)
+        header.appendLE(UInt32(12))
+        header.append(Data(repeating: 0xBB, count: 12))
+
+        // KDF Parameters field (field 11)
+        let kdfData = buildVariantMap(iterations: iterations, memory: memory, parallelism: parallelism)
+        header.append(11)
+        header.appendLE(UInt32(kdfData.count))
+        header.append(kdfData)
+
+        // End of header (field 0)
+        header.append(0)
+        header.appendLE(UInt32(0))
+
+        // Compute header SHA-256 and append it + dummy HMAC
+        let sha = KDBXCrypto.sha256(header)
+        var result = header
+        result.append(sha)
+        result.append(Data(repeating: 0, count: 32)) // dummy HMAC (won't be reached)
+
+        return result
+    }
+
+    private func buildVariantMap(iterations: UInt64, memory: UInt64, parallelism: UInt32) -> Data {
+        var map = Data()
+        map.appendLE(UInt16(0x0100)) // version
+
+        // $UUID — Argon2d (byte array type 0x42)
+        appendVariantEntry(&map, type: 0x42, key: "$UUID",
+                           value: Data([0xEF, 0x63, 0x6D, 0xDF, 0x8C, 0x29, 0x44, 0x4B,
+                                        0x91, 0xF7, 0xA9, 0xA4, 0x03, 0xE3, 0x0A, 0x0C]))
+
+        // S (salt) — byte array
+        appendVariantEntry(&map, type: 0x42, key: "S", value: Data(repeating: 0xCC, count: 32))
+
+        // I (iterations) — UInt64
+        var iterBytes = Data(count: 8)
+        iterBytes.withUnsafeMutableBytes { $0.storeBytes(of: iterations.littleEndian, as: UInt64.self) }
+        appendVariantEntry(&map, type: 0x05, key: "I", value: iterBytes)
+
+        // M (memory) — UInt64
+        var memBytes = Data(count: 8)
+        memBytes.withUnsafeMutableBytes { $0.storeBytes(of: memory.littleEndian, as: UInt64.self) }
+        appendVariantEntry(&map, type: 0x05, key: "M", value: memBytes)
+
+        // P (parallelism) — UInt32
+        var parBytes = Data(count: 4)
+        parBytes.withUnsafeMutableBytes { $0.storeBytes(of: parallelism.littleEndian, as: UInt32.self) }
+        appendVariantEntry(&map, type: 0x04, key: "P", value: parBytes)
+
+        // Terminator
+        map.append(0x00)
+
+        return map
+    }
+
+    private func appendVariantEntry(_ data: inout Data, type: UInt8, key: String, value: Data) {
+        data.append(type)
+        let keyData = Data(key.utf8)
+        data.appendLE(UInt32(keyData.count))
+        data.append(keyData)
+        data.appendLE(UInt32(value.count))
+        data.append(value)
+    }
+}
+
+// MARK: - Test Data Helpers
+
+private extension Data {
+    mutating func appendLE(_ value: UInt32) {
+        var v = value.littleEndian
+        append(Data(bytes: &v, count: 4))
+    }
+
+    mutating func appendLE(_ value: UInt16) {
+        var v = value.littleEndian
+        append(Data(bytes: &v, count: 2))
+    }
 }
