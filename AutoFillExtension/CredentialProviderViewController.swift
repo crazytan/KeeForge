@@ -49,7 +49,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                     throw ASExtensionError(.failed)
                 }
 
-                let context = try await BiometricService.authenticate(reason: "AutoFill with KeeVault")
+                let context = try await BiometricService.authenticate(reason: "AutoFill with KeeForge")
                 let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
                 try await loadEntries(password: nil, compositeKey: compositeKey)
 
@@ -87,7 +87,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
 
         let alert = UIAlertController(
-            title: "Unlock KeeVault",
+            title: "Unlock KeeForge",
             message: "Enter your master password or use biometrics.",
             preferredStyle: .alert
         )
@@ -161,7 +161,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                     throw NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.failed.rawValue)
                 }
 
-                let context = try await BiometricService.authenticate(reason: "Unlock KeeVault for AutoFill")
+                let context = try await BiometricService.authenticate(reason: "Unlock KeeForge for AutoFill")
                 let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
                 try await loadEntries(password: nil, compositeKey: compositeKey)
                 presentMatchesOrFinish()

@@ -51,7 +51,7 @@ private final class ScreenProtectionViewController: UIViewController {
         blur.contentView.addSubview(icon)
 
         let title = UILabel()
-        title.text = "KeeVault Locked"
+        title.text = "KeeForge Locked"
         title.font = .preferredFont(forTextStyle: .headline)
         title.textColor = .label
         title.translatesAutoresizingMaskIntoConstraints = false

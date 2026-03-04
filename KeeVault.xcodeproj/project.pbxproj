@@ -730,7 +730,7 @@
 				);
 				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keevault.app.autofill;
-				PRODUCT_NAME = KeeVaultAutoFill;
+				PRODUCT_NAME = KeeForgeAutoFill;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -766,7 +766,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.keevault.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeeVault.app/KeeVault";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeeForge.app/KeeForge";
 				TEST_TARGET_NAME = KeeVault;
 			};
 			name = Release;
@@ -787,7 +787,8 @@
 				);
 				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keevault.app;
-				PRODUCT_NAME = KeeVault;
+				PRODUCT_MODULE_NAME = KeeVault;
+				PRODUCT_NAME = KeeForge;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -807,7 +808,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.keevault.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeeVault.app/KeeVault";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeeForge.app/KeeForge";
 				TEST_TARGET_NAME = KeeVault;
 			};
 			name = Debug;
@@ -888,7 +889,8 @@
 				);
 				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keevault.app;
-				PRODUCT_NAME = KeeVault;
+				PRODUCT_MODULE_NAME = KeeVault;
+				PRODUCT_NAME = KeeForge;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -910,7 +912,7 @@
 				);
 				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.keevault.app.autofill;
-				PRODUCT_NAME = KeeVaultAutoFill;
+				PRODUCT_NAME = KeeForgeAutoFill;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

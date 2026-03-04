@@ -15,7 +15,7 @@ struct UnlockView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
 
-            Text("KeeVault")
+            Text("KeeForge")
                 .font(.largeTitle.bold())
 
             if viewModel.hasSavedFile {

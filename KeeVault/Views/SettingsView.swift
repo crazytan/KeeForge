@@ -62,7 +62,7 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    LabeledContent("App", value: "KeeVault")
+                    LabeledContent("App", value: "KeeForge")
 
                     LabeledContent("Version", value: appVersion)
 
