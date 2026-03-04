@@ -23,6 +23,9 @@
 
 ## Unreleased
 
+### Changes
+- Renamed app display name from KeeVault to KeeForge (bundle IDs and internal identifiers unchanged)
+
 ### Features
 - **QuickType AutoFill** — credential suggestions appear in the keyboard bar in Safari. Tap to autofill with Face ID, no full AutoFill popup needed. Toggle in Settings → Security → Quick AutoFill.
 

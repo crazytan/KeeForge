@@ -29,7 +29,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: KeeVault/KeeVault.entitlements
-        PRODUCT_NAME: KeeVault
+        PRODUCT_NAME: KeeForge
+        PRODUCT_MODULE_NAME: KeeVault
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "2"
         GENERATE_INFOPLIST_FILE: false
@@ -57,7 +58,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.keevault.app.autofill
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: AutoFillExtension/AutoFillExtension.entitlements
-        PRODUCT_NAME: KeeVaultAutoFill
+        PRODUCT_NAME: KeeForgeAutoFill
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "2"
         GENERATE_INFOPLIST_FILE: false
@@ -100,6 +101,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.keevault.app.tests
         GENERATE_INFOPLIST_FILE: true
         TEST_TARGET_NAME: KeeVault
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/KeeForge.app/KeeForge"
     dependencies:
       - target: KeeVault
     sources:
