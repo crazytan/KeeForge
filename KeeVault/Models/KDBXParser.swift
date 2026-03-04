@@ -55,7 +55,7 @@ enum KDBXParser {
 
     // MARK: - Errors
 
-    enum ParseError: Error, LocalizedError {
+    enum ParseError: Error, LocalizedError, Equatable {
         case invalidSignature
         case unsupportedVersion(UInt16)
         case truncatedFile
@@ -63,6 +63,8 @@ enum KDBXParser {
         case xmlParsingFailed
         case invalidBlockHMAC
         case innerHeaderInvalid
+        case malformedVariantMap
+        case kdfParameterOutOfRange(String)
 
         var errorDescription: String? {
             switch self {
@@ -73,6 +75,8 @@ enum KDBXParser {
             case .xmlParsingFailed: "Failed to parse database XML"
             case .invalidBlockHMAC: "Block HMAC invalid — wrong password or corrupted file"
             case .innerHeaderInvalid: "Invalid inner header"
+            case .malformedVariantMap: "Malformed variant map in header"
+            case .kdfParameterOutOfRange(let p): "KDF parameter out of range: \(p)"
             }
         }
     }
@@ -101,15 +105,15 @@ enum KDBXParser {
         var reader = DataReader(data: data)
 
         // 1. Verify signatures
-        let sig1 = reader.readUInt32()
-        let sig2 = reader.readUInt32()
+        let sig1 = try reader.readUInt32()
+        let sig2 = try reader.readUInt32()
         guard sig1 == kdbxSignature1, sig2 == kdbxSignature2 else {
             throw ParseError.invalidSignature
         }
 
         // 2. Version
-        let _ = reader.readUInt16()
-        let versionMajor = reader.readUInt16()
+        let _ = try reader.readUInt16()
+        let versionMajor = try reader.readUInt16()
         guard versionMajor == versionKDBX4 else {
             throw ParseError.unsupportedVersion(versionMajor)
         }
@@ -121,8 +125,8 @@ enum KDBXParser {
         let headerBytes = data.subdata(in: headerStart..<headerEnd)
 
         // 4. Header SHA-256 and HMAC
-        let storedHeaderSHA = reader.readBytes(32)
-        let storedHeaderHMAC = reader.readBytes(32)
+        let storedHeaderSHA = try reader.readBytes(32)
+        let storedHeaderHMAC = try reader.readBytes(32)
 
         let computedHeaderSHA = KDBXCrypto.sha256(headerBytes)
         guard constantTimeEqual(storedHeaderSHA, computedHeaderSHA) else {
@@ -230,29 +234,29 @@ enum KDBXParser {
         var header = Header()
 
         while reader.hasMore {
-            let fieldID = reader.readUInt8()
-            let fieldSize = Int(reader.readUInt32())
+            let fieldID = try reader.readUInt8()
+            let fieldSize = Int(try reader.readUInt32())
 
             guard let field = HeaderField(rawValue: fieldID) else {
-                reader.skip(fieldSize)
+                try reader.skip(fieldSize)
                 continue
             }
 
             switch field {
             case .endOfHeader:
-                reader.skip(fieldSize)
+                try reader.skip(fieldSize)
                 return header
             case .cipherID:
-                header.cipherID = reader.readBytes(fieldSize)
+                header.cipherID = try reader.readBytes(fieldSize)
             case .compressionFlags:
-                header.compressionFlags = reader.readUInt32From(fieldSize)
+                header.compressionFlags = try reader.readUInt32From(fieldSize)
             case .masterSeed:
-                header.masterSeed = reader.readBytes(fieldSize)
+                header.masterSeed = try reader.readBytes(fieldSize)
             case .encryptionIV:
-                header.encryptionIV = reader.readBytes(fieldSize)
+                header.encryptionIV = try reader.readBytes(fieldSize)
             case .kdfParameters:
-                let kdfData = reader.readBytes(fieldSize)
-                header.kdfParameters = parseVariantMap(kdfData)
+                let kdfData = try reader.readBytes(fieldSize)
+                header.kdfParameters = try parseVariantMap(kdfData)
             }
         }
 
@@ -264,24 +268,24 @@ enum KDBXParser {
         var streamKey = Data()
 
         while reader.hasMore {
-            let fieldID = reader.readUInt8()
-            let fieldSize = Int(reader.readUInt32())
+            let fieldID = try reader.readUInt8()
+            let fieldSize = Int(try reader.readUInt32())
 
             guard let field = InnerHeaderField(rawValue: fieldID) else {
-                reader.skip(fieldSize)
+                try reader.skip(fieldSize)
                 continue
             }
 
             switch field {
             case .endOfHeader:
-                reader.skip(fieldSize)
+                try reader.skip(fieldSize)
                 return (streamID, streamKey)
             case .innerRandomStreamID:
-                streamID = reader.readUInt32From(fieldSize)
+                streamID = try reader.readUInt32From(fieldSize)
             case .innerRandomStreamKey:
-                streamKey = reader.readBytes(fieldSize)
+                streamKey = try reader.readBytes(fieldSize)
             case .binary:
-                reader.skip(fieldSize)
+                try reader.skip(fieldSize)
             }
         }
 
@@ -290,32 +294,37 @@ enum KDBXParser {
 
     // MARK: - Variant Map (KDF Parameters)
 
-    private static func parseVariantMap(_ data: Data) -> [String: Any] {
+    private static func parseVariantMap(_ data: Data) throws -> [String: Any] {
         var reader = DataReader(data: data)
         var result: [String: Any] = [:]
 
         // Skip version
-        let _ = reader.readUInt16()
+        let _ = try reader.readUInt16()
 
         while reader.hasMore {
-            let type = reader.readUInt8()
+            let type = try reader.readUInt8()
             if type == 0 { break }
 
-            let keyLen = Int(reader.readUInt32())
-            let key = String(data: reader.readBytes(keyLen), encoding: .utf8) ?? ""
-            let valLen = Int(reader.readUInt32())
-            let valData = reader.readBytes(valLen)
+            let keyLen = Int(try reader.readUInt32())
+            let key = String(data: try reader.readBytes(keyLen), encoding: .utf8) ?? ""
+            let valLen = Int(try reader.readUInt32())
+            let valData = try reader.readBytes(valLen)
 
             switch type {
             case 0x04: // UInt32
+                guard valData.count == 4 else { throw ParseError.malformedVariantMap }
                 result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }
             case 0x05: // UInt64
+                guard valData.count == 8 else { throw ParseError.malformedVariantMap }
                 result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) }
             case 0x08: // Bool
+                guard !valData.isEmpty else { throw ParseError.malformedVariantMap }
                 result[key] = valData[0] != 0
             case 0x0C: // Int32
+                guard valData.count == 4 else { throw ParseError.malformedVariantMap }
                 result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: Int32.self) }
             case 0x0D: // Int64
+                guard valData.count == 8 else { throw ParseError.malformedVariantMap }
                 result[key] = valData.withUnsafeBytes { $0.loadUnaligned(as: Int64.self) }
             case 0x18: // String
                 result[key] = String(data: valData, encoding: .utf8) ?? ""
@@ -353,11 +362,31 @@ enum KDBXParser {
         let memory = (kdfParams["M"] as? UInt64) ?? (64 * 1024 * 1024) // bytes
         let parallelism = (kdfParams["P"] as? UInt32) ?? 1
 
+        // Bounds checks — these params are attacker-controlled (from file header)
+        guard iterations >= 1, iterations <= 100 else {
+            throw ParseError.kdfParameterOutOfRange("iterations \(iterations) not in 1...100")
+        }
+        guard memory >= 8192, memory <= 4_294_967_296 else {
+            throw ParseError.kdfParameterOutOfRange("memory \(memory) bytes not in 8192...4294967296")
+        }
+        guard parallelism >= 1, parallelism <= 16 else {
+            throw ParseError.kdfParameterOutOfRange("parallelism \(parallelism) not in 1...16")
+        }
+
+        // Safe UInt32 conversions — fail closed on overflow
+        guard let iterationsU32 = UInt32(exactly: iterations) else {
+            throw ParseError.kdfParameterOutOfRange("iterations \(iterations) overflows UInt32")
+        }
+        let memoryKiB = memory / 1024
+        guard let memoryCostU32 = UInt32(exactly: memoryKiB) else {
+            throw ParseError.kdfParameterOutOfRange("memory \(memory) bytes overflows UInt32 KiB")
+        }
+
         return try Argon2.hash(
             password: compositeKey,
             salt: salt,
-            timeCost: UInt32(iterations),
-            memoryCost: UInt32(memory / 1024), // convert bytes to KiB
+            timeCost: iterationsU32,
+            memoryCost: memoryCostU32,
             parallelism: parallelism,
             hashLength: 32,
             variant: variant
@@ -371,8 +400,8 @@ enum KDBXParser {
         var blockIndex: UInt64 = 0
 
         while true {
-            let storedHMAC = reader.readBytes(32)
-            let blockSizeRaw = reader.readInt32()
+            let storedHMAC = try reader.readBytes(32)
+            let blockSizeRaw = try reader.readInt32()
 
             guard blockSizeRaw >= 0 else { throw ParseError.truncatedFile }
 
@@ -387,7 +416,7 @@ enum KDBXParser {
                 break
             }
 
-            let blockData = reader.readBytes(Int(blockSizeRaw))
+            let blockData = try reader.readBytes(Int(blockSizeRaw))
 
             let hmacKey = computeBlockHMACKey(blockIndex: blockIndex, baseKey: baseKey)
             var msg = Data()
@@ -442,43 +471,48 @@ struct DataReader {
 
     var hasMore: Bool { offset < data.count }
 
-    mutating func readUInt8() -> UInt8 {
-        guard offset < data.count else { return 0 }
+    mutating func readUInt8() throws -> UInt8 {
+        guard offset < data.count else { throw KDBXParser.ParseError.truncatedFile }
         let val = data[offset]
         offset += 1
         return val
     }
 
-    mutating func readUInt16() -> UInt16 {
-        let bytes = readBytes(2)
+    mutating func readUInt16() throws -> UInt16 {
+        let bytes = try readBytes(2)
         return bytes.withUnsafeBytes { $0.loadUnaligned(as: UInt16.self).littleEndian }
     }
 
-    mutating func readUInt32() -> UInt32 {
-        let bytes = readBytes(4)
+    mutating func readUInt32() throws -> UInt32 {
+        let bytes = try readBytes(4)
         return bytes.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).littleEndian }
     }
 
-    mutating func readInt32() -> Int32 {
-        let bytes = readBytes(4)
+    mutating func readInt32() throws -> Int32 {
+        let bytes = try readBytes(4)
         return bytes.withUnsafeBytes { $0.loadUnaligned(as: Int32.self).littleEndian }
     }
 
-    mutating func readUInt32From(_ size: Int) -> UInt32 {
-        let bytes = readBytes(size)
-        guard bytes.count >= 4 else { return 0 }
+    mutating func readUInt32From(_ size: Int) throws -> UInt32 {
+        let bytes = try readBytes(size)
+        guard bytes.count >= 4 else { throw KDBXParser.ParseError.truncatedFile }
         return bytes.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).littleEndian }
     }
 
-    mutating func readBytes(_ count: Int) -> Data {
-        let end = min(offset + count, data.count)
-        let result = data.subdata(in: offset..<end)
-        offset = end
+    mutating func readBytes(_ count: Int) throws -> Data {
+        guard count >= 0, offset + count <= data.count else {
+            throw KDBXParser.ParseError.truncatedFile
+        }
+        let result = data.subdata(in: offset..<(offset + count))
+        offset += count
         return result
     }
 
-    mutating func skip(_ count: Int) {
-        offset = min(offset + count, data.count)
+    mutating func skip(_ count: Int) throws {
+        guard count >= 0, offset + count <= data.count else {
+            throw KDBXParser.ParseError.truncatedFile
+        }
+        offset += count
     }
 }
 
