@@ -20,15 +20,27 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         self.serviceIdentifiers = serviceIdentifiers
         targetRecordIdentifier = nil
         didAttemptAutoBiometricUnlock = false
-        presentUnlockPromptIfNeeded()
+        pendingUnlock = true
     }
 
     override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
         serviceIdentifiers = [credentialIdentity.serviceIdentifier]
         targetRecordIdentifier = credentialIdentity.recordIdentifier
         didAttemptAutoBiometricUnlock = false
-        presentUnlockPromptIfNeeded()
+        // Delay unlock to ensure the view is fully presented,
+        // otherwise biometric auth fails with "not interactive".
+        pendingUnlock = true
     }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if pendingUnlock {
+            pendingUnlock = false
+            presentUnlockPromptIfNeeded()
+        }
+    }
+
+    private var pendingUnlock = false
 
     override func provideCredentialWithoutUserInteraction(for credentialIdentity: ASPasswordCredentialIdentity) {
         guard SettingsService.quickAutoFillEnabled else {
