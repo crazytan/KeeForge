@@ -17,7 +17,6 @@
 
 ### v2 roadmap
 - Editing support (create/modify entries)
-- EU App Store launch
 - iPad-native layout
 - Sync / attachments
 
@@ -39,7 +38,6 @@
 ### Changes
 - Renamed from KeeVault to KeeForge (display name, all internal references, folders, scheme, module name)
 - License changed to GPLv3
-- EU App Store availability enabled
 - Switched favicon provider from Google to DuckDuckGo (privacy)
 - Private/internal domains filtered from favicon fetching
 - Passwords and TOTP secrets stored as AES-GCM `EncryptedValue` in memory (lazy decrypt on demand)
