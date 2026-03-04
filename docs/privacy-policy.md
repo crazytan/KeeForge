@@ -4,7 +4,7 @@
 
 ## Overview
 
-KeeVault is a local-only KeePass-compatible password manager. Your privacy is not just a feature — it's the entire point.
+KeeForge is a local-only KeePass-compatible password manager. Your privacy is not just a feature — it's the entire point.
 
 ## Data Collection
 
@@ -14,12 +14,12 @@ KeeVault is a local-only KeePass-compatible password manager. Your privacy is no
 
 - All data stays on your device
 - Database files are accessed from locations you choose (Files, iCloud Drive, etc.)
-- KeeVault never uploads, transmits, or shares your data with any server
+- KeeForge never uploads, transmits, or shares your data with any server
 - Face ID / Touch ID authentication is handled entirely by iOS on-device
 
 ## Third-Party Services
 
-KeeVault uses no third-party SDKs, analytics tools, or network services.
+KeeForge uses no third-party SDKs, analytics tools, or network services.
 
 ## AutoFill
 

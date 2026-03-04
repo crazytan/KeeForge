@@ -17,7 +17,7 @@ Requires Xcode 16+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```bash
 xcodegen generate
-open KeeVault.xcodeproj
+open KeeForge.xcodeproj
 ```
 
 Select an iOS 17+ simulator or device, build and run.
@@ -31,15 +31,15 @@ Select an iOS 17+ simulator or device, build and run.
 ## Project Structure
 
 ```
-KeeVault/
+KeeForge/
 ├── App/              # App entry point
 ├── Models/           # KDBX parser, crypto, data models
 ├── Services/         # Keychain, Biometric, Clipboard, CredentialMatcher
 ├── ViewModels/       # DatabaseViewModel, TOTPViewModel
 ├── Views/            # SwiftUI views
 AutoFillExtension/    # AutoFill Credential Provider
-KeeVaultTests/        # Unit tests
-KeeVaultUITests/      # UI tests
+KeeForgeTests/        # Unit tests
+KeeForgeUITests/      # UI tests
 TestFixtures/         # Test .kdbx fixtures
 ```
 

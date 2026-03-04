@@ -1,4 +1,4 @@
-# KeeVault
+# KeeForge
 
 A free, open-source KeePass password manager for iOS.
 
@@ -7,9 +7,9 @@ A free, open-source KeePass password manager for iOS.
 Having issues or have a question? Reach out:
 
 - **Email:** tjtanjia.tan@gmail.com
-- **GitHub Issues:** [github.com/crazytan/KeeVault/issues](https://github.com/crazytan/KeeVault/issues)
+- **GitHub Issues:** [github.com/crazytan/KeeForge/issues](https://github.com/crazytan/KeeForge/issues)
 
 ## Links
 
 - [Privacy Policy](privacy-policy)
-- [Source Code](https://github.com/crazytan/KeeVault)
+- [Source Code](https://github.com/crazytan/KeeForge)
