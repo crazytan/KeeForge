@@ -1,4 +1,4 @@
-name: KeeVault
+name: KeeForge
 options:
   bundleIdPrefix: com.keevault
   deploymentTarget:
@@ -18,19 +18,19 @@ packages:
     url: https://github.com/tmthecoder/Argon2Swift.git
     branch: main
 targets:
-  KeeVault:
+  KeeForge:
     type: application
     platform: iOS
     settings:
       base:
-        INFOPLIST_FILE: KeeVault/Info.plist
+        INFOPLIST_FILE: KeeForge/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.keevault.app
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGN_ENTITLEMENTS: KeeVault/KeeVault.entitlements
+        CODE_SIGN_ENTITLEMENTS: KeeForge/KeeForge.entitlements
         PRODUCT_NAME: KeeForge
-        PRODUCT_MODULE_NAME: KeeVault
+        PRODUCT_MODULE_NAME: KeeForge
         MARKETING_VERSION: "1.1.0"
         CURRENT_PROJECT_VERSION: "2"
         GENERATE_INFOPLIST_FILE: false
@@ -41,13 +41,13 @@ targets:
         codeSign: true
       - package: Argon2Swift
     sources:
-      - path: KeeVault/App
-      - path: KeeVault/Models
-      - path: KeeVault/Services
-      - path: KeeVault/ViewModels
-      - path: KeeVault/Views
-      - path: KeeVault/Extensions
-      - path: KeeVault/Resources
+      - path: KeeForge/App
+      - path: KeeForge/Models
+      - path: KeeForge/Services
+      - path: KeeForge/ViewModels
+      - path: KeeForge/Views
+      - path: KeeForge/Extensions
+      - path: KeeForge/Resources
 
   AutoFillExtension:
     type: app-extension
@@ -66,66 +66,66 @@ targets:
       - package: Argon2Swift
     sources:
       - path: AutoFillExtension
-      - path: KeeVault/Models
-      - path: KeeVault/Services/BiometricService.swift
-      - path: KeeVault/Services/DocumentPickerService.swift
-      - path: KeeVault/Services/KeychainService.swift
-      - path: KeeVault/Services/SettingsService.swift
-      - path: KeeVault/Services/SharedVaultStore.swift
-      - path: KeeVault/Services/CredentialMatcher.swift
-      - path: KeeVault/Services/CredentialIdentityStoreManager.swift
-      - path: KeeVault/Services/FaviconService.swift
+      - path: KeeForge/Models
+      - path: KeeForge/Services/BiometricService.swift
+      - path: KeeForge/Services/DocumentPickerService.swift
+      - path: KeeForge/Services/KeychainService.swift
+      - path: KeeForge/Services/SettingsService.swift
+      - path: KeeForge/Services/SharedVaultStore.swift
+      - path: KeeForge/Services/CredentialMatcher.swift
+      - path: KeeForge/Services/CredentialIdentityStoreManager.swift
+      - path: KeeForge/Services/FaviconService.swift
 
-  KeeVaultUITests:
+  KeeForgeUITests:
     type: bundle.ui-testing
     platform: iOS
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.keevault.app.uitests
         GENERATE_INFOPLIST_FILE: true
-        TEST_TARGET_NAME: KeeVault
+        TEST_TARGET_NAME: KeeForge
     dependencies:
-      - target: KeeVault
+      - target: KeeForge
     sources:
-      - path: KeeVaultUITests
+      - path: KeeForgeUITests
       - path: TestFixtures/test.kdbx
         buildPhase: resources
       - path: TestFixtures/demo.kdbx
         buildPhase: resources
 
-  KeeVaultTests:
+  KeeForgeTests:
     type: bundle.unit-test
     platform: iOS
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.keevault.app.tests
         GENERATE_INFOPLIST_FILE: true
-        TEST_TARGET_NAME: KeeVault
+        TEST_TARGET_NAME: KeeForge
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/KeeForge.app/KeeForge"
     dependencies:
-      - target: KeeVault
+      - target: KeeForge
     sources:
-      - path: KeeVaultTests
+      - path: KeeForgeTests
       - path: TestFixtures/test.kdbx
         buildPhase: resources
       - path: TestFixtures/demo.kdbx
         buildPhase: resources
 
 schemes:
-  KeeVault:
+  KeeForge:
     build:
       targets:
-        KeeVault: all
-        KeeVaultUITests: [test]
+        KeeForge: all
+        KeeForgeUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
       gatherCoverageData: false
       targets:
-        - name: KeeVaultTests
+        - name: KeeForgeTests
           parallelizable: false
           randomExecutionOrder: false
-        - name: KeeVaultUITests
+        - name: KeeForgeUITests
           parallelizable: false
           randomExecutionOrder: false

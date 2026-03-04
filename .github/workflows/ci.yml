@@ -15,8 +15,8 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     env:
-      SCHEME: KeeVault
-      PROJECT: KeeVault.xcodeproj
+      SCHEME: KeeForge
+      PROJECT: KeeForge.xcodeproj
       DESTINATION: 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
 
     steps:
@@ -64,7 +64,7 @@ jobs:
             -project "$PROJECT" \
             -scheme "$SCHEME" \
             -destination "$DESTINATION" \
-            -only-testing:KeeVaultTests \
+            -only-testing:KeeForgeTests \
             | xcpretty
 
       - name: Run UI tests
@@ -75,5 +75,5 @@ jobs:
             -project "$PROJECT" \
             -scheme "$SCHEME" \
             -destination "$DESTINATION" \
-            -only-testing:KeeVaultUITests \
+            -only-testing:KeeForgeUITests \
             | xcpretty

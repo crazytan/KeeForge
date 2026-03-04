@@ -9,9 +9,9 @@ iOS KeePass password manager (KDBX 4.x, read-only in v1). Swift 6, SwiftUI, iOS 
 ## Architecture
 
 ```
-KeeVault/
+KeeForge/
 ├── App/
-│   └── KeeVaultApp.swift          # App entry, scene lifecycle, auto-lock on background
+│   └── KeeForgeApp.swift          # App entry, scene lifecycle, auto-lock on background
 ├── Models/
 │   ├── KDBXParser.swift           # KDBX 4.x binary format → XML → KPGroup/KPEntry tree
 │   ├── KDBXCrypto.swift           # AES-256, ChaCha20, HMAC-SHA256, Argon2, gzip
@@ -48,8 +48,8 @@ KeeVault/
 AutoFillExtension/
 └── CredentialProviderViewController.swift  # ASCredentialProviderViewController
 
-KeeVaultTests/          # Unit tests
-KeeVaultUITests/        # UI tests (XCUITest)
+KeeForgeTests/          # Unit tests
+KeeForgeUITests/        # UI tests (XCUITest)
 TestFixtures/test.kdbx  # Test database
 ```
 
@@ -115,9 +115,9 @@ TestFixtures/test.kdbx  # Test database
 
 ```bash
 xcodegen generate
-xcodebuild build -project KeeVault.xcodeproj -scheme KeeVault \
+xcodebuild build -project KeeForge.xcodeproj -scheme KeeForge \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
-xcodebuild test -project KeeVault.xcodeproj -scheme KeeVault \
+xcodebuild test -project KeeForge.xcodeproj -scheme KeeForge \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
@@ -141,7 +141,7 @@ xcrun simctl shutdown all && xcrun simctl erase <UDID>
   - **Social** group: Twitter (with 2 history entries), Discord (with TOTP), Offline Key, Public Profile
   - **Work** group: Email, GitHub (with TOTP)
 
-**UI test gotcha:** The root group has only subgroups, no direct entries. `openAnyEntry()` must navigate into a non-empty subgroup (Social or Work) to find entries. The helper `findNonEmptyGroup()` in `KeeVaultUITestCase.swift` handles this by preferring groups whose label doesn't contain "0 entries".
+**UI test gotcha:** The root group has only subgroups, no direct entries. `openAnyEntry()` must navigate into a non-empty subgroup (Social or Work) to find entries. The helper `findNonEmptyGroup()` in `KeeForgeUITestCase.swift` handles this by preferring groups whose label doesn't contain "0 entries".
 
 ## CHANGELOG
 

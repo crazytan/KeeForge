@@ -6,7 +6,7 @@ Display website favicons next to entries in group lists, entry detail, search re
 
 ## Opt-in
 
-Favicons require network requests, which breaks KeeVault's current zero-network policy. This must be:
+Favicons require network requests, which breaks KeeForge's current zero-network policy. This must be:
 - **Off by default** — new toggle in Settings: "Show Website Icons"
 - Stored in `SettingsService` (standard UserDefaults, not shared — AutoFill can have its own toggle or inherit)
 - When off, show the existing KeePass icon (key/globe/etc based on `iconID`)

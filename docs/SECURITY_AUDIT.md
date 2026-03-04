@@ -1,15 +1,15 @@
-# KeeVault Security Audit
+# KeeForge Security Audit
 
 **Date:** 2026-02-26
 **Auditor:** Automated Security Review (Claude)
-**Scope:** All Swift source files in KeeVault iOS app + AutoFill extension
+**Scope:** All Swift source files in KeeForge iOS app + AutoFill extension
 **Commit:** `968d142` (main branch)
 
 ---
 
 ## Executive Summary
 
-KeeVault is an iOS KeePass (.kdbx 4.x) client with AutoFill extension support. The app handles master passwords, KDBX decryption, keychain storage, clipboard operations, and biometric authentication.
+KeeForge is an iOS KeePass (.kdbx 4.x) client with AutoFill extension support. The app handles master passwords, KDBX decryption, keychain storage, clipboard operations, and biometric authentication.
 
 **Overall assessment: Moderate risk.** The app gets the fundamentals right — Keychain access control uses `.biometryCurrentSet` with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, Argon2 key derivation is correctly implemented, clipboard has expiration timeouts, and screen protection activates on background. However, there are significant gaps in memory hygiene for cryptographic secrets (the single most important issue for a password manager), clipboard data can leak via Universal Clipboard, and HMAC comparisons are not constant-time.
 
@@ -430,7 +430,7 @@ The Keychain access control is well-configured:
 
 **File:** `SettingsService.swift:25`
 
-The `AutoLockTimeout` enum includes a `.never` case. While this is a user choice and defaults to `.immediately`, the "Never" option means the vault stays unlocked indefinitely until the app is backgrounded (which triggers `lock()` in `KeeVaultApp.swift:23`).
+The `AutoLockTimeout` enum includes a `.never` case. While this is a user choice and defaults to `.immediately`, the "Never" option means the vault stays unlocked indefinitely until the app is backgrounded (which triggers `lock()` in `KeeForgeApp.swift:23`).
 
 Since backgrounding always locks regardless of the timer setting, the "Never" option only applies to idle time while the app is in the foreground. This is acceptable but worth noting.
 
@@ -440,36 +440,36 @@ Since backgrounding always locks regardless of the timer setting, the "Never" op
 
 | File | Lines | Status |
 |------|-------|--------|
-| `KeeVault/Models/KDBXCrypto.swift` | 294 | Reviewed |
-| `KeeVault/Models/KDBXParser.swift` | 929 | Reviewed |
-| `KeeVault/Models/Entry.swift` | 87 | Reviewed |
-| `KeeVault/Models/Group.swift` | 61 | Reviewed |
-| `KeeVault/Models/TOTPGenerator.swift` | 83 | Reviewed |
-| `KeeVault/Services/KeychainService.swift` | 115 | Reviewed |
-| `KeeVault/Services/BiometricService.swift` | 40 | Reviewed |
-| `KeeVault/Services/ClipboardService.swift` | 10 | Reviewed |
-| `KeeVault/Services/SharedVaultStore.swift` | 41 | Reviewed |
-| `KeeVault/Services/ScreenProtectionService.swift` | 76 | Reviewed |
-| `KeeVault/Services/FaviconService.swift` | 156 | Reviewed |
-| `KeeVault/Services/SettingsService.swift` | 96 | Reviewed |
-| `KeeVault/Services/DocumentPickerService.swift` | 15 | Reviewed |
-| `KeeVault/Services/CredentialMatcher.swift` | 42 | Reviewed |
-| `KeeVault/Services/HapticService.swift` | 12 | Reviewed |
-| `KeeVault/ViewModels/DatabaseViewModel.swift` | 329 | Reviewed |
-| `KeeVault/ViewModels/TOTPViewModel.swift` | 41 | Reviewed |
-| `KeeVault/Views/UnlockView.swift` | 150 | Reviewed |
-| `KeeVault/Views/EntryDetailView.swift` | 335 | Reviewed |
-| `KeeVault/Views/GroupListView.swift` | 145 | Reviewed |
-| `KeeVault/Views/EntryListView.swift` | 18 | Reviewed |
-| `KeeVault/Views/SearchView.swift` | 43 | Reviewed |
-| `KeeVault/Views/SettingsView.swift` | 89 | Reviewed |
-| `KeeVault/Views/FaviconView.swift` | 70 | Reviewed |
-| `KeeVault/Extensions/NavigationConformances.swift` | 21 | Reviewed |
-| `KeeVault/App/KeeVaultApp.swift` | 70 | Reviewed |
+| `KeeForge/Models/KDBXCrypto.swift` | 294 | Reviewed |
+| `KeeForge/Models/KDBXParser.swift` | 929 | Reviewed |
+| `KeeForge/Models/Entry.swift` | 87 | Reviewed |
+| `KeeForge/Models/Group.swift` | 61 | Reviewed |
+| `KeeForge/Models/TOTPGenerator.swift` | 83 | Reviewed |
+| `KeeForge/Services/KeychainService.swift` | 115 | Reviewed |
+| `KeeForge/Services/BiometricService.swift` | 40 | Reviewed |
+| `KeeForge/Services/ClipboardService.swift` | 10 | Reviewed |
+| `KeeForge/Services/SharedVaultStore.swift` | 41 | Reviewed |
+| `KeeForge/Services/ScreenProtectionService.swift` | 76 | Reviewed |
+| `KeeForge/Services/FaviconService.swift` | 156 | Reviewed |
+| `KeeForge/Services/SettingsService.swift` | 96 | Reviewed |
+| `KeeForge/Services/DocumentPickerService.swift` | 15 | Reviewed |
+| `KeeForge/Services/CredentialMatcher.swift` | 42 | Reviewed |
+| `KeeForge/Services/HapticService.swift` | 12 | Reviewed |
+| `KeeForge/ViewModels/DatabaseViewModel.swift` | 329 | Reviewed |
+| `KeeForge/ViewModels/TOTPViewModel.swift` | 41 | Reviewed |
+| `KeeForge/Views/UnlockView.swift` | 150 | Reviewed |
+| `KeeForge/Views/EntryDetailView.swift` | 335 | Reviewed |
+| `KeeForge/Views/GroupListView.swift` | 145 | Reviewed |
+| `KeeForge/Views/EntryListView.swift` | 18 | Reviewed |
+| `KeeForge/Views/SearchView.swift` | 43 | Reviewed |
+| `KeeForge/Views/SettingsView.swift` | 89 | Reviewed |
+| `KeeForge/Views/FaviconView.swift` | 70 | Reviewed |
+| `KeeForge/Extensions/NavigationConformances.swift` | 21 | Reviewed |
+| `KeeForge/App/KeeForgeApp.swift` | 70 | Reviewed |
 | `AutoFillExtension/CredentialProviderViewController.swift` | 235 | Reviewed |
-| `KeeVault/KeeVault.entitlements` | 16 | Reviewed |
+| `KeeForge/KeeForge.entitlements` | 16 | Reviewed |
 | `AutoFillExtension/AutoFillExtension.entitlements` | 16 | Reviewed |
-| `KeeVault/Info.plist` | 39 | Reviewed |
+| `KeeForge/Info.plist` | 39 | Reviewed |
 | `AutoFillExtension/Info.plist` | 40 | Reviewed |
 
 ---
