@@ -11,8 +11,7 @@ final class ReviewPromptServiceTests: XCTestCase {
         testDefaults = UserDefaults(suiteName: suiteName)!
         ReviewPromptService.defaults = testDefaults
         ReviewPromptService.resetForTesting()
-        ReviewPromptService.minimumActions = 7
-        ReviewPromptService.minimumDaysBetweenPrompts = 30
+        ReviewPromptService.minimumActions = 10
     }
 
     override func tearDown() {
@@ -39,82 +38,65 @@ final class ReviewPromptServiceTests: XCTestCase {
     // MARK: - shouldPrompt logic
 
     func testShouldNotPromptBelowThreshold() {
-        ReviewPromptService.actionCount = 6
+        ReviewPromptService.actionCount = 9
         XCTAssertFalse(ReviewPromptService.shouldPrompt())
     }
 
     func testShouldPromptAtThreshold() {
-        ReviewPromptService.actionCount = 7
+        ReviewPromptService.actionCount = 10
         XCTAssertTrue(ReviewPromptService.shouldPrompt())
     }
 
     func testShouldPromptAboveThreshold() {
-        ReviewPromptService.actionCount = 15
+        ReviewPromptService.actionCount = 25
         XCTAssertTrue(ReviewPromptService.shouldPrompt())
     }
 
-    func testShouldNotPromptIfAlreadyPromptedForCurrentVersion() {
-        ReviewPromptService.actionCount = 10
-        ReviewPromptService.lastPromptedVersion = ReviewPromptService.currentAppVersion
+    func testShouldNotPromptIfAlreadyPrompted() {
+        ReviewPromptService.actionCount = 20
+        ReviewPromptService.hasPrompted = true
         XCTAssertFalse(ReviewPromptService.shouldPrompt())
     }
 
-    func testShouldPromptForNewVersion() {
+    func testOnceEverSemantics() {
+        // First time: should prompt
         ReviewPromptService.actionCount = 10
-        ReviewPromptService.lastPromptedVersion = "0.0.0-old"
         XCTAssertTrue(ReviewPromptService.shouldPrompt())
-    }
 
-    func testShouldNotPromptIfTooSoonSinceLastPrompt() {
-        ReviewPromptService.actionCount = 10
-        ReviewPromptService.lastPromptedVersion = "0.0.0-old"
-        ReviewPromptService.lastPromptedDate = Date() // just now
+        // Mark as prompted
+        ReviewPromptService.hasPrompted = true
+
+        // Never again, even with more actions
+        ReviewPromptService.actionCount = 100
         XCTAssertFalse(ReviewPromptService.shouldPrompt())
     }
 
-    func testShouldPromptIfEnoughDaysSinceLastPrompt() {
-        ReviewPromptService.actionCount = 10
-        ReviewPromptService.lastPromptedVersion = "0.0.0-old"
-        ReviewPromptService.lastPromptedDate = Calendar.current.date(byAdding: .day, value: -31, to: Date())
-        XCTAssertTrue(ReviewPromptService.shouldPrompt())
-    }
-
-    func testShouldPromptIfNoLastPromptedDate() {
-        ReviewPromptService.actionCount = 10
-        ReviewPromptService.lastPromptedDate = nil
-        XCTAssertTrue(ReviewPromptService.shouldPrompt())
-    }
-
-    // MARK: - Custom thresholds
+    // MARK: - Custom threshold
 
     func testCustomMinimumActionsThreshold() {
-        ReviewPromptService.minimumActions = 3
-        ReviewPromptService.actionCount = 2
+        ReviewPromptService.minimumActions = 5
+        ReviewPromptService.actionCount = 4
         XCTAssertFalse(ReviewPromptService.shouldPrompt())
 
-        ReviewPromptService.actionCount = 3
+        ReviewPromptService.actionCount = 5
         XCTAssertTrue(ReviewPromptService.shouldPrompt())
     }
 
-    func testCustomMinimumDaysBetweenPrompts() {
-        ReviewPromptService.minimumDaysBetweenPrompts = 7
-        ReviewPromptService.actionCount = 10
-        ReviewPromptService.lastPromptedVersion = "0.0.0-old"
-        ReviewPromptService.lastPromptedDate = Calendar.current.date(byAdding: .day, value: -8, to: Date())
-        XCTAssertTrue(ReviewPromptService.shouldPrompt())
+    // MARK: - hasPrompted
+
+    func testHasPromptedStartsFalse() {
+        XCTAssertFalse(ReviewPromptService.hasPrompted)
     }
 
     // MARK: - resetForTesting
 
     func testResetClearsAllState() {
         ReviewPromptService.actionCount = 42
-        ReviewPromptService.lastPromptedVersion = "1.0.0"
-        ReviewPromptService.lastPromptedDate = Date()
+        ReviewPromptService.hasPrompted = true
 
         ReviewPromptService.resetForTesting()
 
         XCTAssertEqual(ReviewPromptService.actionCount, 0)
-        XCTAssertNil(ReviewPromptService.lastPromptedVersion)
-        XCTAssertNil(ReviewPromptService.lastPromptedDate)
+        XCTAssertFalse(ReviewPromptService.hasPrompted)
     }
 }

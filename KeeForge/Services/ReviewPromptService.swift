@@ -5,31 +5,20 @@ import StoreKit
 enum ReviewPromptService {
     private enum Key {
         static let actionCount = "KeeForge.reviewPrompt.actionCount"
-        static let lastPromptedVersion = "KeeForge.reviewPrompt.lastPromptedVersion"
-        static let lastPromptedDate = "KeeForge.reviewPrompt.lastPromptedDate"
+        static let hasPrompted = "KeeForge.reviewPrompt.hasPrompted"
     }
 
-    nonisolated(unsafe) static var minimumActions = 7
-    nonisolated(unsafe) static var minimumDaysBetweenPrompts = 30
+    nonisolated(unsafe) static var minimumActions = 10
     nonisolated(unsafe) static var defaults: UserDefaults = .standard
-
-    static var currentAppVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-    }
 
     static var actionCount: Int {
         get { defaults.integer(forKey: Key.actionCount) }
         set { defaults.set(newValue, forKey: Key.actionCount) }
     }
 
-    static var lastPromptedVersion: String? {
-        get { defaults.string(forKey: Key.lastPromptedVersion) }
-        set { defaults.set(newValue, forKey: Key.lastPromptedVersion) }
-    }
-
-    static var lastPromptedDate: Date? {
-        get { defaults.object(forKey: Key.lastPromptedDate) as? Date }
-        set { defaults.set(newValue, forKey: Key.lastPromptedDate) }
+    static var hasPrompted: Bool {
+        get { defaults.bool(forKey: Key.hasPrompted) }
+        set { defaults.set(newValue, forKey: Key.hasPrompted) }
     }
 
     static func recordMeaningfulAction() {
@@ -37,14 +26,8 @@ enum ReviewPromptService {
     }
 
     static func shouldPrompt() -> Bool {
+        guard !hasPrompted else { return false }
         guard actionCount >= minimumActions else { return false }
-        guard lastPromptedVersion != currentAppVersion else { return false }
-
-        if let lastDate = lastPromptedDate {
-            let daysSince = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
-            guard daysSince >= minimumDaysBetweenPrompts else { return false }
-        }
-
         return true
     }
 
@@ -53,9 +36,7 @@ enum ReviewPromptService {
 
         guard shouldPrompt() else { return }
 
-        lastPromptedVersion = currentAppVersion
-        lastPromptedDate = Date()
-        actionCount = 0
+        hasPrompted = true
 
         if let scene = UIApplication.shared.connectedScenes
             .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
@@ -65,7 +46,6 @@ enum ReviewPromptService {
 
     static func resetForTesting() {
         defaults.removeObject(forKey: Key.actionCount)
-        defaults.removeObject(forKey: Key.lastPromptedVersion)
-        defaults.removeObject(forKey: Key.lastPromptedDate)
+        defaults.removeObject(forKey: Key.hasPrompted)
     }
 }
