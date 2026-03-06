@@ -1,5 +1,6 @@
 import AuthenticationServices
 import CryptoKit
+import SwiftUI
 import UIKit
 
 @MainActor
@@ -231,8 +232,8 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
         let matches = CredentialMatcher.matchedEntries(from: parsedEntries, for: serviceIdentifiers)
 
-        if matches.isEmpty {
-            cancelRequest(code: .credentialIdentityNotFound)
+        if matches.isEmpty || serviceIdentifiers.isEmpty {
+            presentSearchView(entries: parsedEntries)
             return
         }
 
@@ -267,6 +268,25 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         })
 
         present(alert, animated: true)
+    }
+
+    private func presentSearchView(entries: [KPEntry]) {
+        let searchView = AutoFillSearchView(
+            entries: entries,
+            onSelect: { [weak self] entry in
+                self?.dismiss(animated: false) {
+                    self?.completeRequest(with: entry)
+                }
+            },
+            onCancel: { [weak self] in
+                self?.dismiss(animated: false) {
+                    self?.cancelRequest(code: .userCanceled)
+                }
+            }
+        )
+        let host = UIHostingController(rootView: searchView)
+        host.modalPresentationStyle = .fullScreen
+        present(host, animated: true)
     }
 
     private func completeRequest(with entry: KPEntry) {

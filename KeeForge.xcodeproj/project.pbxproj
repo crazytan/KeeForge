@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01A3F5B7C8D24E9A3F6B1D02 /* AutoFillSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B4E6C9D9E35FAB407C2E13 /* AutoFillSearchView.swift */; };
 		05608A3B8309DC423D0D15EB /* TOTPGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51105ADF7C41EB47401418D9 /* TOTPGenerator.swift */; };
 		109624BC35F24E414533262E /* CredentialIdentityStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00A121EB1739F34DA39FE12 /* CredentialIdentityStoreManager.swift */; };
 		115B1CF896D4326495169AF4 /* demo.kdbx in Resources */ = {isa = PBXBuildFile; fileRef = F3D5CCD3DC2893DC1A65D6DC /* demo.kdbx */; };
@@ -123,6 +124,7 @@
 
 /* Begin PBXFileReference section */
 		012690B5F23A7226C211D172 /* KDBXParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KDBXParserTests.swift; sourceTree = "<group>"; };
+		02B4E6C9D9E35FAB407C2E13 /* AutoFillSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoFillSearchView.swift; sourceTree = "<group>"; };
 		0330F701821BF808278069A3 /* ModelLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLogicTests.swift; sourceTree = "<group>"; };
 		04A1400E503A230DF2633686 /* TOTPGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGeneratorTests.swift; sourceTree = "<group>"; };
 		04C26DB367249DD15342820A /* AutoFillExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AutoFillExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -285,6 +287,7 @@
 			isa = PBXGroup;
 			children = (
 				37FCB8A14A23CD5B7A7C8350 /* AutoFillExtension.entitlements */,
+				02B4E6C9D9E35FAB407C2E13 /* AutoFillSearchView.swift */,
 				5DFD74CE6911EB771A4B7FBD /* CredentialProviderViewController.swift */,
 				7234D6EDEF49F76E532EFD03 /* Info.plist */,
 			);
@@ -614,6 +617,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01A3F5B7C8D24E9A3F6B1D02 /* AutoFillSearchView.swift in Sources */,
 				E1CC83A75E1D8BB5D8CA6096 /* BiometricService.swift in Sources */,
 				45A4512586A9F41FF6C74075 /* CoordinatedFileReader.swift in Sources */,
 				109624BC35F24E414533262E /* CredentialIdentityStoreManager.swift in Sources */,
