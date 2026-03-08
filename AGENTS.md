@@ -16,41 +16,47 @@ KeeForge/
 │   ├── KDBXParser.swift           # KDBX 4.x binary format → XML → KPGroup/KPEntry tree
 │   ├── KDBXCrypto.swift           # AES-256, ChaCha20, HMAC-SHA256, Argon2, gzip
 │   ├── Group.swift                # KPGroup model (tree of groups + entries)
-│   ├── Entry.swift                # KPEntry model (title, username, password, URLs, TOTP)
+│   ├── Entry.swift                # KPEntry model (title, username, password, URLs, TOTP, passkey)
+│   ├── PasskeyCredential.swift    # FIDO2 passkey model parsed from KPEX_PASSKEY_* fields
 │   ├── EncryptedValue.swift       # AES-GCM wrapper for in-memory secret protection
+│   ├── KeyFileProcessor.swift     # Binary, hex, XML v1/v2, arbitrary file key processing
 │   └── TOTPGenerator.swift        # RFC 6238 TOTP generation
 ├── ViewModels/
-│   ├── DatabaseViewModel.swift    # Main VM: unlock, lock, search, sort, state machine
+│   ├── DatabaseViewModel.swift    # Main VM: unlock, lock, search, sort, state machine, backoff
 │   └── TOTPViewModel.swift        # Live TOTP code + countdown timer
 ├── Views/
-│   ├── UnlockView.swift           # Password entry + Face ID unlock + auto-unlock logic
+│   ├── UnlockView.swift           # Password entry + key file picker + Face ID + auto-unlock
 │   ├── GroupListView.swift        # Group/entry navigation (excludes Recycle Bin)
-│   ├── EntryDetailView.swift      # Entry detail with copy actions + Face ID for passwords
+│   ├── EntryDetailView.swift      # Entry detail: fields, TOTP, passkey section, timestamps
 │   ├── EntryListView.swift        # Flat entry list within a group
 │   ├── SearchView.swift           # Search results overlay
 │   ├── FaviconView.swift          # Favicon image with fallback chain (cached → fetch → iconID)
-│   └── SettingsView.swift         # Settings page (security, display, about)
+│   ├── SettingsView.swift         # Settings page (security, display, about, feedback)
+│   └── TipJarView.swift           # StoreKit 2 tip jar (3 tiers)
 ├── Services/
 │   ├── BiometricService.swift     # Face ID / Touch ID availability + authentication
 │   ├── KeychainService.swift      # Composite key storage with biometric access control
 │   ├── SettingsService.swift      # UserDefaults persistence (some shared via App Group)
 │   ├── SharedVaultStore.swift     # App Group shared storage (database bookmark)
 │   ├── CredentialMatcher.swift    # URL matching for AutoFill
+│   ├── CredentialIdentityStoreManager.swift # QuickType credential store
 │   ├── ClipboardService.swift     # Copy with auto-expiry
 │   ├── DocumentPickerService.swift # File bookmark management
-│   ├── FaviconService.swift        # Favicon fetch (Google API) + disk cache with TTL
-│   ├── ScreenProtectionService.swift # Shield on background
+│   ├── FaviconService.swift        # Favicon fetch (DuckDuckGo) + disk cache with TTL
+│   ├── ScreenProtectionService.swift # Blur overlay when screen is captured/recorded
+│   ├── StoreKitManager.swift      # StoreKit 2 IAP manager (tip jar)
+│   ├── PasskeyCrypto.swift        # ECDSA P-256 assertion signing for passkey auth
 │   └── HapticService.swift        # Haptic feedback
 ├── Extensions/
 │   └── NavigationConformances.swift
 └── Resources/
 
 AutoFillExtension/
-└── CredentialProviderViewController.swift  # ASCredentialProviderViewController
+└── CredentialProviderViewController.swift  # ASCredentialProviderViewController (password + passkey)
 
 KeeForgeTests/          # Unit tests
 KeeForgeUITests/        # UI tests (XCUITest)
-TestFixtures/test.kdbx  # Test database
+TestFixtures/           # Test databases and key files
 ```
 
 ## Data Flow
@@ -70,20 +76,48 @@ TestFixtures/test.kdbx  # Test database
 
 - **State machine:** `DatabaseViewModel.State` = `.locked` → `.unlocking` → `.unlocked` / `.error(String)`
 - **Lock cycle tracking:** `lockCycleID` increments on each lock, used to prevent auto-unlock retry loops
-- **Recycle Bin:** parsed from `<RecycleBinUUID>` in XML metadata, stored as `recycleBinUUID` on root `KPGroup`. Excluded from search, AutoFill, and group navigation.
-- **Settings storage:** Most settings in `UserDefaults.standard`. Settings shared with AutoFill extension (like `autoUnlockWithFaceID`) use `UserDefaults(suiteName: SharedVaultStore.appGroupID)`.
+- **Exponential backoff:** `failedAttempts` counter with `lockoutDelay` = 0 for first 3 attempts, then 2s→4s→8s→16s→30s cap
+- **Recycle Bin:** parsed from `<RecycleBinUUID>` in XML metadata, stored as `recycleBinUUID` on root `KPGroup`. Excluded from search, AutoFill, and group navigation
+- **Composite keys:** `KDBXParser.deriveKey(password:keyFileData:)` — `SHA256(password_utf8) || processKeyFile(keyFileData)` → `SHA256(preKey)` → KDF
+- **Settings storage:** Most settings in `UserDefaults.standard`. Settings shared with AutoFill extension (like `autoUnlockWithFaceID`) use `UserDefaults(suiteName: SharedVaultStore.appGroupID)`
 - **App Group:** `group.com.keevault.shared` — shared between main app and AutoFill extension for database bookmark + shared settings + favicon cache
-- **Favicons:** Opt-in via `SettingsService.showWebsiteIcons` (off by default). `FaviconService` fetches from Google favicon API (`/s2/favicons?domain=&sz=64`), caches to App Group container (`favicons/` directory) with SHA256(domain) filenames and 7-day TTL. `FaviconView` is a SwiftUI component with fallback chain: cached → fetch → KeePass iconID → generic key icon. Used in `EntryRow` (24×24), `EntryDetailView` (40×40), and search results.
+- **Favicons:** Opt-in via `SettingsService.showWebsiteIcons` (off by default). `FaviconService` fetches from DuckDuckGo, caches to App Group container (`favicons/` directory) with SHA256(domain) filenames and 7-day TTL
+- **Screen protection:** `ScreenProtectionService` monitors `UIScreen.capturedDidChangeNotification` and shows a blur overlay window at `.alert + 1` level with lock icon
+- **Passkeys:** `PasskeyCredential` model parsed from `KPEX_PASSKEY_*` custom fields. `PasskeyCrypto` handles ECDSA P-256 assertion signing. AutoFill extension responds to `ASPasskeyCredentialRequest`
 
 ## Conventions
 
 - `@Observable`, not `ObservableObject`/`@Published`
 - `NavigationStack` + `NavigationPath`, not `NavigationView`
-- Swift 6 strict concurrency (`Sendable` correctness)
+- Swift 6 strict concurrency (`Sendable` correctness, `SWIFT_STRICT_CONCURRENCY_CHECKS = complete`)
 - Crypto/parsing off main thread
 - No force unwraps outside tests
-- No unnecessary dependencies
-- Accessibility identifiers: `lock.button`, `sort.menu`, `settings.button`, `group.navlink`, `entry.navlink`, `entry.copy.<field>`, `unlock.password.field`, `unlock.button`, `unlock.error.label`
+- No external SPM dependencies (Argon2Swift is the sole exception)
+- Accessibility identifiers for testable UI elements (see list below)
+
+### Accessibility Identifiers
+
+```
+unlock.password.field       # Password SecureField
+unlock.button               # Unlock action button
+unlock.error.label          # Error message label
+unlock.keyfile.row          # Key file selection row
+unlock.keyfile.select       # Select key file button
+unlock.keyfile.clear        # Clear key file button
+lock.button                 # Lock database button
+sort.menu                   # Sort menu in toolbar
+settings.button             # Settings button
+group.navlink               # Group navigation link
+entry.navlink               # Entry navigation link
+entry.password.reveal       # Password reveal/hide toggle
+entry.copy.password         # Copy password
+entry.copy.url              # Copy URL
+entry.copy.totp             # Copy TOTP code
+entry.copy.<field>          # Copy any field (label lowercased, spaces → underscores)
+entry.url.open              # Open URL in browser
+search.results.count        # Search result count (UI testing only)
+search.no-results           # No search results view
+```
 
 ## Adding a New Setting
 
@@ -100,9 +134,11 @@ TestFixtures/test.kdbx  # Test database
 - Composite key stored in Keychain with biometric access control
 - Never store raw master password
 - Auto-lock on background, clear sensitive state
-- Clipboard auto-expires (configurable, default 30s)
+- Clipboard auto-expires (configurable, default 30s, `.localOnly`)
 - No analytics or telemetry. Network calls only for opt-in favicon fetching (domain only, no credentials)
 - Face ID required to reveal/copy passwords
+- Screen recording detection — blur overlay when `UIScreen.isCaptured` is true
+- Exponential backoff on failed password attempts (2s→4s→8s→16s→30s cap)
 
 ## Stable Core (change only for real bugs)
 
@@ -114,11 +150,31 @@ TestFixtures/test.kdbx  # Test database
 ## Build & Test
 
 ```bash
+# Generate Xcode project from project.yml
 xcodegen generate
+
+# Build
 xcodebuild build -project KeeForge.xcodeproj -scheme KeeForge \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+
+# Run all tests
 xcodebuild test -project KeeForge.xcodeproj -scheme KeeForge \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+
+# Run only unit tests
+xcodebuild test -project KeeForge.xcodeproj -scheme KeeForge \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:KeeForgeTests
+
+# Run only UI tests
+xcodebuild test -project KeeForge.xcodeproj -scheme KeeForge \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:KeeForgeUITests
+
+# Using simulator UDID directly
+xcodebuild test -project KeeForge.xcodeproj -scheme KeeForge \
+  -destination 'platform=iOS Simulator,id=AC0AEE19-9C2E-4CCF-BEFD-C20292A2957F' \
+  -only-testing:KeeForgeUITests -quiet
 ```
 
 If simulator gets stuck with "preflight checks" error:
@@ -133,6 +189,13 @@ xcrun simctl shutdown all && xcrun simctl erase <UDID>
 - If a bug is found, write a regression test first, then fix
 - Run the full test suite before committing
 
+### Test Targets
+
+| Target | Type | Bundle ID |
+|--------|------|-----------|
+| KeeForgeTests | Unit tests | `com.keevault.app.tests` |
+| KeeForgeUITests | UI tests (XCUITest) | `com.keevault.app.uitests` |
+
 ### Test Fixture
 
 `TestFixtures/test.kdbx` (password: `testpassword123`) contains:
@@ -141,7 +204,33 @@ xcrun simctl shutdown all && xcrun simctl erase <UDID>
   - **Social** group: Twitter (with 2 history entries), Discord (with TOTP), Offline Key, Public Profile
   - **Work** group: Email, GitHub (with TOTP)
 
+`TestFixtures/demo.kdbx` (password: `password`) — richer demo database with TOTP entries, used for App Store screenshots.
+
+Key file test fixtures: `test-binary.key`, `test-hex.key`, `test-v1.key`, `test-v2.keyx`, `test-arbitrary.key`, `demo-keyfile.kdbx` + `demo-keyfile.key`.
+
+**Note:** `test.kdbx` does NOT contain passkey entries or key-file-protected databases — those require separate fixtures (`demo-keyfile.kdbx` for key file testing).
+
 **UI test gotcha:** The root group has only subgroups, no direct entries. `openAnyEntry()` must navigate into a non-empty subgroup (Social or Work) to find entries. The helper `findNonEmptyGroup()` in `KeeForgeUITestCase.swift` handles this by preferring groups whose label doesn't contain "0 entries".
+
+### UI Test Base Class
+
+`KeeForgeUITestCase` provides:
+- `app` — pre-configured `XCUIApplication` with test.kdbx injected via launch environment
+- `unlock(password:)` — type password and tap unlock
+- `unlockSuccessfully()` — unlock with correct password and assert success
+- `openAnyEntry()` — navigate groups to find and tap an entry
+- `firstVisibleEntryLabel()` — get title of first visible entry
+
+## v1.4.0 Features
+
+- **Key file support** — binary, hex, XML v1/v2, and arbitrary file key formats via `KeyFileProcessor`
+- **Passkey detection & authentication** — FIDO2/WebAuthn passkeys parsed from KeePassXC `KPEX_PASSKEY_*` fields, ECDSA P-256 assertion signing via `PasskeyCrypto`, AutoFill extension handles `ASPasskeyCredentialRequest`
+- **Tip jar** — StoreKit 2 in-app purchases (3 tiers) in `TipJarView` / `StoreKitManager`
+- **Sort direction** — ascending/descending toggle in settings, sort by title/created/modified date
+- **Entry timestamps** — created and modified dates displayed in entry detail view
+- **Screen recording blur** — `ScreenProtectionService` shows blur overlay when `UIScreen.isCaptured` is true
+- **Exponential backoff** — failed password attempts trigger increasing lockout delays (2s→4s→8s→16s→30s cap)
+- **Feedback button** — "Send Feedback" mailto link in Settings About section
 
 ## CHANGELOG
 
