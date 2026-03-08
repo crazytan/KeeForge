@@ -13,63 +13,11 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Toggle("Auto-Unlock with Face ID", isOn: $autoUnlockWithFaceID)
-
-                    Toggle("Quick AutoFill", isOn: $quickAutoFillEnabled)
-
-                    Picker("Auto-Lock Timeout", selection: $autoLockTimeout) {
-                        ForEach(SettingsService.AutoLockTimeout.allCases, id: \.self) { option in
-                            Text(option.rawValue).tag(option)
-                        }
-                    }
-
-                    Picker("Clipboard Clear Timeout", selection: $clipboardTimeout) {
-                        ForEach(SettingsService.ClipboardTimeout.allCases, id: \.self) { option in
-                            Text(option.rawValue).tag(option)
-                        }
-                    }
-                } header: {
-                    Text("Security")
-                } footer: {
-                    if quickAutoFillEnabled {
-                        Text("Credential suggestions appear in the keyboard bar. Requires Face ID to unlock when tapped.")
-                    }
-                }
-
-                Section {
-                    Toggle("Download Website Favicons", isOn: $showWebsiteIcons)
-
-                    Picker("Default Sort Order", selection: $viewModel.sortOrder) {
-                        ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
-                            Text(order.rawValue).tag(order)
-                        }
-                    }
-                } header: {
-                    Text("Display")
-                } footer: {
-                    if showWebsiteIcons {
-                        Text("Fetches icons from Google. Only the website domain is sent.")
-                    }
-                }
-
-                if showWebsiteIcons {
-                    Section {
-                        Button("Clear Favicon Cache", role: .destructive) {
-                            FaviconService.clearCache()
-                        }
-                    }
-                }
-
-                Section("About") {
-                    LabeledContent("App", value: "KeeForge")
-
-                    LabeledContent("Version", value: appVersion)
-
-                    Link(destination: URL(string: "https://github.com/crazytan/KeeForge/issues")!) {
-                        Label("Send Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
-                    }
-                }
+                securitySection
+                displaySection
+                faviconCacheSection
+                aboutSection
+                TipJarView()
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -97,6 +45,73 @@ struct SettingsView: View {
                 } else {
                     CredentialIdentityStoreManager.clearStore()
                 }
+            }
+        }
+    }
+
+    private var securitySection: some View {
+        Section {
+            Toggle("Auto-Unlock with Face ID", isOn: $autoUnlockWithFaceID)
+
+            Toggle("Quick AutoFill", isOn: $quickAutoFillEnabled)
+
+            Picker("Auto-Lock Timeout", selection: $autoLockTimeout) {
+                ForEach(SettingsService.AutoLockTimeout.allCases, id: \.self) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+
+            Picker("Clipboard Clear Timeout", selection: $clipboardTimeout) {
+                ForEach(SettingsService.ClipboardTimeout.allCases, id: \.self) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+        } header: {
+            Text("Security")
+        } footer: {
+            if quickAutoFillEnabled {
+                Text("Credential suggestions appear in the keyboard bar. Requires Face ID to unlock when tapped.")
+            }
+        }
+    }
+
+    private var displaySection: some View {
+        Section {
+            Toggle("Download Website Favicons", isOn: $showWebsiteIcons)
+
+            Picker("Default Sort Order", selection: $viewModel.sortOrder) {
+                ForEach(DatabaseViewModel.SortOrder.allCases, id: \.self) { order in
+                    Text(order.rawValue).tag(order)
+                }
+            }
+        } header: {
+            Text("Display")
+        } footer: {
+            if showWebsiteIcons {
+                Text("Fetches icons from Google. Only the website domain is sent.")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var faviconCacheSection: some View {
+        if showWebsiteIcons {
+            Section {
+                Button("Clear Favicon Cache", role: .destructive) {
+                    FaviconService.clearCache()
+                }
+            }
+        }
+    }
+
+    private var aboutSection: some View {
+        Section("About") {
+            LabeledContent("App", value: "KeeForge")
+
+            LabeledContent("Version", value: appVersion)
+
+            Link(destination: URL(string: "https://github.com/crazytan/KeeForge/issues")!) {
+                Label("Send Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
             }
         }
     }
