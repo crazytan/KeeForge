@@ -47,6 +47,9 @@ final class DatabaseViewModel {
         didSet { Self.saveSortOrder(sortOrder) }
     }
 
+    private(set) var failedAttempts = 0
+    private(set) var lockoutUntil: Date?
+
     private var databaseURL: URL?
     private(set) var compositeKey: Data?
     private(set) var sessionKey: SymmetricKey?
@@ -148,9 +151,26 @@ final class DatabaseViewModel {
         state = .locked
     }
 
+    /// Lockout delay in seconds: 0, 0, 0, 2, 4, 8, 16, 30, 30, 30...
+    private var lockoutDelay: TimeInterval {
+        guard failedAttempts >= 3 else { return 0 }
+        return min(30, pow(2, Double(failedAttempts - 2)))
+    }
+
+    var lockoutRemaining: TimeInterval {
+        guard let until = lockoutUntil else { return 0 }
+        return max(0, until.timeIntervalSinceNow)
+    }
+
     func unlock(password: String, keyFileData: Data? = nil) async {
         guard let url = effectiveDatabaseURL else {
             state = .error("No database file selected")
+            return
+        }
+
+        if let until = lockoutUntil, Date.now < until {
+            let seconds = Int(ceil(until.timeIntervalSinceNow))
+            state = .error("Too many failed attempts. Try again in \(seconds)s.")
             return
         }
 
@@ -177,6 +197,8 @@ final class DatabaseViewModel {
             self.rootGroup = root
             self.compositeKey = compositeKey
             self.sessionKey = sessionKey
+            self.failedAttempts = 0
+            self.lockoutUntil = nil
             state = .unlocked
             startInactivityTimer()
 
@@ -190,6 +212,11 @@ final class DatabaseViewModel {
         } catch {
             if isUITesting {
                 Self.diagnostic("unlock: failed with error '\(error.localizedDescription)'")
+            }
+            failedAttempts += 1
+            let delay = lockoutDelay
+            if delay > 0 {
+                lockoutUntil = Date.now.addingTimeInterval(delay)
             }
             state = .error(error.localizedDescription)
         }
