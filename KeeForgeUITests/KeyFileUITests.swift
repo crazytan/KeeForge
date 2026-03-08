@@ -1,5 +1,7 @@
 import XCTest
 
+// MARK: - Key file UI controls (uses default test.kdbx)
+
 final class KeyFileUITests: KeeForgeUITestCase {
 
     private func findKeyFileSelect() -> XCUIElement? {
@@ -54,5 +56,53 @@ final class KeyFileUITests: KeeForgeUITestCase {
             let hasModal = browseButton.waitForExistence(timeout: 3) || cancelButton.exists
             XCTAssertTrue(hasModal, "Document picker did not appear after tapping Select key file")
         }
+    }
+}
+
+// MARK: - Key file unlock end-to-end (uses demo-keyfile.kdbx + demo-keyfile.key)
+
+final class KeyFileUnlockUITests: KeeForgeUITestCase {
+
+    override var databaseFixtureName: String { "demo-keyfile" }
+    override var keyFileFixtureName: String? { "demo-keyfile" }
+    override var keyFileFixtureExtension: String { "key" }
+
+    /// Wait for key file injection to complete (name label appears in key file row).
+    private func waitForKeyFileInjection() {
+        let passwordField = app.secureTextFields["unlock.password.field"]
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 10), "Password field did not appear")
+
+        // Wait for key file name to appear, confirming env var injection worked
+        let keyFileLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'demo-keyfile'")).firstMatch
+        XCTAssertTrue(keyFileLabel.waitForExistence(timeout: 10), "Key file name did not appear — injection may have failed")
+    }
+
+    private func unlockWithKeyFileOnly() {
+        waitForKeyFileInjection()
+
+        let unlockButton = app.buttons["unlock.button"]
+        XCTAssertTrue(unlockButton.waitForExistence(timeout: 5), "Unlock button not found")
+        unlockButton.tap()
+
+        sleep(3)
+
+        XCTAssertTrue(
+            app.buttons["lock.button"].waitForExistence(timeout: 20),
+            "Vault did not unlock with key file only"
+        )
+    }
+
+    func testKeyFileOnlyUnlockSucceeds() {
+        // demo-keyfile.kdbx uses key file only (no password)
+        // The key file is auto-injected via UI_TEST_KEYFILE_BASE64 env var
+        unlockWithKeyFileOnly()
+    }
+
+    func testKeyFileUnlockShowsEntries() {
+        unlockWithKeyFileOnly()
+
+        // After unlock, entries should be visible (navigate into a group if needed)
+        let entryLabel = firstVisibleEntryLabel()
+        XCTAssertNotNil(entryLabel, "No entries visible after key file unlock")
     }
 }

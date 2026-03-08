@@ -46,6 +46,7 @@ struct UnlockView: View {
             }
         )
         .onAppear {
+            loadUITestKeyFileIfNeeded()
             autoUnlockWithBiometricsIfNeeded()
         }
         .onChange(of: viewModel.lockCycleID) { _, _ in
@@ -92,6 +93,7 @@ struct UnlockView: View {
                 showPicker = true
             }
             .font(.footnote)
+            .accessibilityIdentifier("unlock.choose-different")
 
             if isUnlocking {
                 ProgressView("Decrypting...")
@@ -195,6 +197,16 @@ struct UnlockView: View {
 
         autoUnlockAttemptedLockCycle = viewModel.lockCycleID
         unlockWithBiometrics()
+    }
+
+    private func loadUITestKeyFileIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-ui-testing") else { return }
+        guard keyFileData == nil else { return }
+        let env = ProcessInfo.processInfo.environment
+        guard let base64 = env["UI_TEST_KEYFILE_BASE64"], !base64.isEmpty,
+              let data = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) else { return }
+        keyFileData = data
+        keyFileName = env["UI_TEST_KEYFILE_FILENAME"] ?? "test.key"
     }
 
     private func handleFileSelection(_ result: Result<URL, Error>) {

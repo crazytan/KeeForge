@@ -3,22 +3,43 @@ import XCTest
 class KeeForgeUITestCase: XCTestCase {
     private static let uiTestDBBase64Env = "UI_TEST_DB_BASE64"
     private static let uiTestDBFilenameEnv = "UI_TEST_DB_FILENAME"
+    private static let uiTestKeyFileBase64Env = "UI_TEST_KEYFILE_BASE64"
+    private static let uiTestKeyFileFilenameEnv = "UI_TEST_KEYFILE_FILENAME"
 
     var app: XCUIApplication!
+
+    /// Override in subclasses to use a different database fixture (e.g. "demo-keyfile").
+    var databaseFixtureName: String { "test" }
+
+    /// Override in subclasses to inject a key file fixture (e.g. "demo-keyfile", extension "key").
+    var keyFileFixtureName: String? { nil }
+    var keyFileFixtureExtension: String { "key" }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
 
         app = XCUIApplication()
 
-        guard let fixtureURL = Bundle(for: KeeForgeUITestCase.self).url(forResource: "test", withExtension: "kdbx") else {
-            throw NSError(domain: "KeeForgeUITests", code: 1, userInfo: [NSLocalizedDescriptionKey: "Missing test.kdbx fixture in test bundle"])
+        let dbName = databaseFixtureName
+        guard let fixtureURL = Bundle(for: KeeForgeUITestCase.self).url(forResource: dbName, withExtension: "kdbx") else {
+            throw NSError(domain: "KeeForgeUITests", code: 1, userInfo: [NSLocalizedDescriptionKey: "Missing \(dbName).kdbx fixture in test bundle"])
         }
 
         let fixtureData = try Data(contentsOf: fixtureURL)
         app.launchArguments += ["-ui-testing"]
         app.launchEnvironment[Self.uiTestDBBase64Env] = fixtureData.base64EncodedString()
-        app.launchEnvironment[Self.uiTestDBFilenameEnv] = "test.kdbx"
+        app.launchEnvironment[Self.uiTestDBFilenameEnv] = "\(dbName).kdbx"
+
+        if let keyFileName = keyFileFixtureName {
+            let ext = keyFileFixtureExtension
+            guard let keyFileURL = Bundle(for: KeeForgeUITestCase.self).url(forResource: keyFileName, withExtension: ext) else {
+                throw NSError(domain: "KeeForgeUITests", code: 2, userInfo: [NSLocalizedDescriptionKey: "Missing \(keyFileName).\(ext) fixture in test bundle"])
+            }
+            let keyFileData = try Data(contentsOf: keyFileURL)
+            app.launchEnvironment[Self.uiTestKeyFileBase64Env] = keyFileData.base64EncodedString()
+            app.launchEnvironment[Self.uiTestKeyFileFilenameEnv] = "\(keyFileName).\(ext)"
+        }
+
         app.launch()
     }
 

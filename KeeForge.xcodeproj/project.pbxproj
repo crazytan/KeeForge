@@ -36,6 +36,7 @@
 		51FFA32D55161412B62549FA /* PasskeyCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74EDA5EB2D69BA039CD0CDC /* PasskeyCrypto.swift */; };
 		5211F36B737E9F5842979B11 /* LockUnlockUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E5E0B52692F925F8CAB5A1 /* LockUnlockUITests.swift */; };
 		52A878251EF1561A765305C0 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E1AFDB57675ED7C7FD2941 /* SearchUITests.swift */; };
+		546946CF03D4BA3759BDA5F1 /* demo-keyfile.kdbx in Resources */ = {isa = PBXBuildFile; fileRef = 4CC3CF24A57A3BB531DA56C2 /* demo-keyfile.kdbx */; };
 		55EB4D56C31B965154EE992C /* CredentialIdentityStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00A121EB1739F34DA39FE12 /* CredentialIdentityStoreManager.swift */; };
 		58AD474260AA662614997B94 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92CDD8F39D3FA23FCD1722E8 /* SearchView.swift */; };
 		593F3597EC5E308BE2BA67BC /* AutoLockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A60D769EF54ACAE8FAFEC73 /* AutoLockTests.swift */; };
@@ -55,6 +56,7 @@
 		7C249710427EF896850775E7 /* CredentialMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952D7703E80D468B1A3168D8 /* CredentialMatcherTests.swift */; };
 		7FE2210E6E580757720E6153 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A785C829BFA44B1D7EC69DC /* SettingsView.swift */; };
 		81770A3091FFDA100CCA01BA /* PasskeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B8F8B108FB789996AD3C0BD /* PasskeyTests.swift */; };
+		82C95283AF20A54E1651411A /* demo-keyfile.key in Resources */ = {isa = PBXBuildFile; fileRef = 7AB5EEF311A401337289C014 /* demo-keyfile.key */; };
 		835C85AA1D1B65323ED71533 /* SharedVaultStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84A9EECD929C6729AE6C797 /* SharedVaultStore.swift */; };
 		85F4BF94918B5C26592668EA /* NavigationConformances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33FB55D1B41198FB84115734 /* NavigationConformances.swift */; };
 		8A1E1202234A0F6A2F42E507 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC501EE7E48C61C39641D99D /* HapticService.swift */; };
@@ -93,7 +95,9 @@
 		D8393AA881B7494A8674843C /* AutoFillExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 04C26DB367249DD15342820A /* AutoFillExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8525BB3ED1047BB1853E0BE /* DocumentPickerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63318429CBE0EF21ED75376B /* DocumentPickerService.swift */; };
 		D87DA0BA86638BA1327DA22D /* CoordinatedFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F6578919788B26EB07E259 /* CoordinatedFileReader.swift */; };
+		DA4E00D5996B327F4D3D589E /* PasskeyDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A615B59AA50919BA538CDBFF /* PasskeyDisplayTests.swift */; };
 		DB37BBC30E20632BEC1EC52E /* KeyFileUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15DBC84769C820D86294442 /* KeyFileUITests.swift */; };
+		DC071F7A487715323727D9A4 /* VerifyKeyfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C745531E956F6B374FC606F /* VerifyKeyfileTests.swift */; };
 		E152AFB67F2E8119575474B7 /* test-arbitrary.key in Resources */ = {isa = PBXBuildFile; fileRef = 8F5D08487A8DF3C72204ADEB /* test-arbitrary.key */; };
 		E18998A392523968184EBBA0 /* test-binary.key in Resources */ = {isa = PBXBuildFile; fileRef = B7EDDD48D0CB18EA1D45220E /* test-binary.key */; };
 		E1CC83A75E1D8BB5D8CA6096 /* BiometricService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77DE986C9A71BA15E1B4FE48 /* BiometricService.swift */; };
@@ -176,6 +180,7 @@
 		4A15836C142BB997DA70F8FE /* KeeForgeUITestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeeForgeUITestCase.swift; sourceTree = "<group>"; };
 		4B393A7DB556210E94C0F3A2 /* AppStoreScreenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshots.swift; sourceTree = "<group>"; };
 		4C350259754DFA5D42D782A7 /* test-v1.key */ = {isa = PBXFileReference; path = "test-v1.key"; sourceTree = "<group>"; };
+		4C745531E956F6B374FC606F /* VerifyKeyfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyKeyfileTests.swift; sourceTree = "<group>"; };
 		4C77F34C13AF18DED3B4314B /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		4CC3CF24A57A3BB531DA56C2 /* demo-keyfile.kdbx */ = {isa = PBXFileReference; path = "demo-keyfile.kdbx"; sourceTree = "<group>"; };
 		51105ADF7C41EB47401418D9 /* TOTPGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGenerator.swift; sourceTree = "<group>"; };
@@ -206,6 +211,7 @@
 		9C2994095EA31C77486F44CF /* TipJarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipJarUITests.swift; sourceTree = "<group>"; };
 		9FD05564FDF57A102CBE8A6E /* NavigationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationUITests.swift; sourceTree = "<group>"; };
 		A3660A7394A4B715ECCC64FF /* TOTPViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPViewModelTests.swift; sourceTree = "<group>"; };
+		A615B59AA50919BA538CDBFF /* PasskeyDisplayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyDisplayTests.swift; sourceTree = "<group>"; };
 		A6681D2B1E9D865434D606B7 /* TOTPViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPViewModel.swift; sourceTree = "<group>"; };
 		A74EDA5EB2D69BA039CD0CDC /* PasskeyCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyCrypto.swift; sourceTree = "<group>"; };
 		ACDB93B40CC051227D2E6D76 /* test.kdbx */ = {isa = PBXFileReference; path = test.kdbx; sourceTree = "<group>"; };
@@ -428,6 +434,7 @@
 				012690B5F23A7226C211D172 /* KDBXParserTests.swift */,
 				8C0418ADF1FDFF66CD471789 /* KeyFileProcessorTests.swift */,
 				0330F701821BF808278069A3 /* ModelLogicTests.swift */,
+				A615B59AA50919BA538CDBFF /* PasskeyDisplayTests.swift */,
 				9B8F8B108FB789996AD3C0BD /* PasskeyTests.swift */,
 				CE7654CB864A7BECF13483C8 /* ReviewPromptServiceTests.swift */,
 				43638A44681D59420BAF6F8A /* SettingsServiceTests.swift */,
@@ -435,6 +442,7 @@
 				DFF14B46CC89D1B7A9138E80 /* SortOrderTests.swift */,
 				04A1400E503A230DF2633686 /* TOTPGeneratorTests.swift */,
 				A3660A7394A4B715ECCC64FF /* TOTPViewModelTests.swift */,
+				4C745531E956F6B374FC606F /* VerifyKeyfileTests.swift */,
 			);
 			path = KeeForgeTests;
 			sourceTree = "<group>";
@@ -620,6 +628,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				546946CF03D4BA3759BDA5F1 /* demo-keyfile.kdbx in Resources */,
+				82C95283AF20A54E1651411A /* demo-keyfile.key in Resources */,
 				115B1CF896D4326495169AF4 /* demo.kdbx in Resources */,
 				B6DEC2F6E1AD9EC4CB6408C9 /* test.kdbx in Resources */,
 			);
@@ -706,6 +716,7 @@
 				BFB9B3CB53F5C29E4AB01037 /* KDBXParserTests.swift in Sources */,
 				D7EA74FAC284CF307F6BA24C /* KeyFileProcessorTests.swift in Sources */,
 				397AE855030AD882CF3B5A65 /* ModelLogicTests.swift in Sources */,
+				DA4E00D5996B327F4D3D589E /* PasskeyDisplayTests.swift in Sources */,
 				81770A3091FFDA100CCA01BA /* PasskeyTests.swift in Sources */,
 				BC9357DCA2D6F7054C763864 /* ReviewPromptServiceTests.swift in Sources */,
 				D60E824CAF57BAF67DE77841 /* SettingsServiceTests.swift in Sources */,
@@ -713,6 +724,7 @@
 				5E1E376FC35BF2DB8D73A60B /* SortOrderTests.swift in Sources */,
 				C5CCB8692F1F9D9E2769664A /* TOTPGeneratorTests.swift in Sources */,
 				C2AD719517065CB7FC2BEB4F /* TOTPViewModelTests.swift in Sources */,
+				DC071F7A487715323727D9A4 /* VerifyKeyfileTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

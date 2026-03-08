@@ -95,6 +95,10 @@ targets:
         buildPhase: resources
       - path: TestFixtures/demo.kdbx
         buildPhase: resources
+      - path: TestFixtures/demo-keyfile.kdbx
+        buildPhase: resources
+      - path: TestFixtures/demo-keyfile.key
+        buildPhase: resources
 
   KeeForgeTests:
     type: bundle.unit-test

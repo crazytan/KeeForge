@@ -104,6 +104,7 @@ unlock.error.label          # Error message label
 unlock.keyfile.row          # Key file selection row
 unlock.keyfile.select       # Select key file button
 unlock.keyfile.clear        # Clear key file button
+unlock.choose-different     # Choose Different File button
 lock.button                 # Lock database button
 sort.menu                   # Sort menu in toolbar
 settings.button             # Settings button
