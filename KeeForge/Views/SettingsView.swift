@@ -84,6 +84,11 @@ struct SettingsView: View {
                     Text(order.rawValue).tag(order)
                 }
             }
+
+            Picker("Sort Direction", selection: $viewModel.sortAscending) {
+                Text("Ascending").tag(true)
+                Text("Descending").tag(false)
+            }
         } header: {
             Text("Display")
         } footer: {

@@ -25,6 +25,10 @@ final class DatabaseViewModel {
         case modifiedDate = "Date Modified"
     }
 
+    var sortAscending: Bool {
+        didSet { Self.saveSortAscending(sortAscending) }
+    }
+
     private(set) var state: State = .locked
     private(set) var lockCycleID = 0
     private(set) var rootGroup: KPGroup?
@@ -108,6 +112,7 @@ final class DatabaseViewModel {
         let launchArgs = ProcessInfo.processInfo.arguments
         isUITesting = launchArgs.contains(Self.uiTestingLaunchArg)
         sortOrder = Self.loadSortOrder()
+        sortAscending = Self.loadSortAscending()
 
         if isUITesting {
             Self.diagnostic("init: running in UI test mode")
@@ -303,24 +308,44 @@ final class DatabaseViewModel {
     }
 
     func sortedGroups(_ groups: [KPGroup]) -> [KPGroup] {
+        let asc = sortAscending
         switch sortOrder {
         case .title:
-            return groups.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            return groups.sorted {
+                let result = $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                return asc ? result : !result
+            }
         case .createdDate:
-            return groups.sorted { ($0.creationTime ?? .distantPast) < ($1.creationTime ?? .distantPast) }
+            return groups.sorted {
+                let result = ($0.creationTime ?? .distantPast) < ($1.creationTime ?? .distantPast)
+                return asc ? result : !result
+            }
         case .modifiedDate:
-            return groups.sorted { ($0.lastModificationTime ?? .distantPast) > ($1.lastModificationTime ?? .distantPast) }
+            return groups.sorted {
+                let result = ($0.lastModificationTime ?? .distantPast) < ($1.lastModificationTime ?? .distantPast)
+                return asc ? result : !result
+            }
         }
     }
 
     func sortedEntries(_ entries: [KPEntry]) -> [KPEntry] {
+        let asc = sortAscending
         switch sortOrder {
         case .title:
-            return entries.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+            return entries.sorted {
+                let result = $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+                return asc ? result : !result
+            }
         case .createdDate:
-            return entries.sorted { ($0.creationTime ?? .distantPast) < ($1.creationTime ?? .distantPast) }
+            return entries.sorted {
+                let result = ($0.creationTime ?? .distantPast) < ($1.creationTime ?? .distantPast)
+                return asc ? result : !result
+            }
         case .modifiedDate:
-            return entries.sorted { ($0.lastModificationTime ?? .distantPast) > ($1.lastModificationTime ?? .distantPast) }
+            return entries.sorted {
+                let result = ($0.lastModificationTime ?? .distantPast) < ($1.lastModificationTime ?? .distantPast)
+                return asc ? result : !result
+            }
         }
     }
 
@@ -333,6 +358,19 @@ final class DatabaseViewModel {
 
     private static func saveSortOrder(_ order: SortOrder) {
         UserDefaults.standard.set(order.rawValue, forKey: sortOrderKey)
+    }
+
+    private static let sortAscendingKey = "KeeForge.sortAscending"
+
+    private static func loadSortAscending() -> Bool {
+        if UserDefaults.standard.object(forKey: sortAscendingKey) == nil {
+            return true
+        }
+        return UserDefaults.standard.bool(forKey: sortAscendingKey)
+    }
+
+    private static func saveSortAscending(_ ascending: Bool) {
+        UserDefaults.standard.set(ascending, forKey: sortAscendingKey)
     }
 
     // MARK: - Credential Identity Store
