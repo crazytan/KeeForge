@@ -33,7 +33,7 @@ struct UnlockView: View {
         .padding()
         .fileImporter(
             isPresented: $showFilePicker,
-            allowedContentTypes: [.init(filenameExtension: "kdbx")!],
+            allowedContentTypes: [.item],
             onCompletion: handleFileSelection
         )
         .onAppear {
@@ -194,6 +194,7 @@ struct UnlockView: View {
     private func handleFileSelection(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
+            guard url.pathExtension.lowercased() == "kdbx" else { return }
             viewModel.selectFile(url)
             passwordFocused = true
         case .failure:
