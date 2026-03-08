@@ -5,11 +5,17 @@ struct TipJarView: View {
     private var store: StoreKitManager { StoreKitManager.shared }
     @State private var showThankYou = false
 
+    @State private var loadingDone = false
+
     var body: some View {
         Section {
-            if store.tips.isEmpty {
+            if store.tips.isEmpty && !loadingDone {
                 ProgressView()
                     .frame(maxWidth: .infinity, alignment: .center)
+            } else if store.tips.isEmpty {
+                Text("Tip Jar is not available right now.")
+                    .foregroundStyle(.secondary)
+                    .font(.callout)
             } else {
                 ForEach(store.tips, id: \.id) { product in
                     Button {
@@ -39,6 +45,7 @@ struct TipJarView: View {
         }
         .task {
             await store.loadProducts()
+            loadingDone = true
         }
         .onChange(of: store.purchaseResult) { _, result in
             if case .success = result {
