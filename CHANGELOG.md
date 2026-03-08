@@ -1,29 +1,29 @@
 # Changelog
 
-## TODO
+## v1.4.0 (unreleased)
 
-### Features
-- [x] Feedback button in About page → links to GitHub Issues
-- [x] Tip Jar in About page — consumable IAPs (StoreKit 2)
-- [x] Key file support (`.key` / `.keyx` — composite key unlock) → see docs/KEY_FILE_IMPLEMENTATION.md
-- [ ] Passkey support
-- [x] Show created/modified timestamps in entry detail view
-- [x] Sort ascending/descending toggle (currently always ascending)
+### New Features
+- **Key file support** — unlock databases with password + key file (composite key). Supports all KeePass key file formats: binary, hex, XML v1.0 (`.key`), XML v2.0 (`.keyx`), and arbitrary files
+- **Tip Jar** — three tip tiers via StoreKit 2 consumable IAPs in the About section
+- **Feedback button** — links to GitHub Issues from the About section
+- **Entry timestamps** — created and modified dates shown in entry detail view
+- **Sort direction** — ascending/descending toggle for all sort orders
 
-### Bugs
-- [x] Tip Jar section shows spinner on device (StoreKit config not wired to scheme, or products not in App Store Connect)
+### Security
+- Exponential backoff after failed password attempts (2s→4s→8s→16s→30s cap)
+- Screen recording detection — blurs vault content when `UIScreen.isCaptured` is true
+- QuickType AutoFill now enabled by default for new users
 
-### Security (from SECURITY_AUDIT.md)
-- [x] **HIGH-1/2:** Lazy decrypt — passwords and TOTP secrets held as AES-GCM `EncryptedValue` in memory, decrypted on demand only (copy, reveal, AutoFill, TOTP generation). Session key nilled on lock.
-- [x] **MEDIUM-1:** Switch favicon provider from Google to DuckDuckGo (privacy)
-- [x] **MEDIUM-5:** Filter internal/private domain names from favicon fetching
-- [x] **LOW-2:** Add exponential backoff after failed password attempts
-- [x] **LOW-3:** Detect active screen recording (`UIScreen.isCaptured`) and show warning/blur
+### Fixes
+- Tip Jar shows "not available" instead of infinite spinner when products aren't configured
+- Fixed demo.kdbx TOTP entries (bare base32 → proper `otpauth://` URIs)
+- App Store screenshot test: reveals colored password + scrolls to show TOTP
 
-### v2 roadmap
-- Editing support (create/modify entries)
-- iPad-native layout
-- Sync / attachments
+### TODO (v2 roadmap)
+- [ ] Passkey support → see docs/PASSKEY_IMPLEMENTATION.md
+- [ ] Editing support (create/modify entries)
+- [ ] iPad-native layout
+- [ ] Sync / attachments
 
 ## v1.3.0 (2026-03-03)
 
@@ -39,18 +39,18 @@
 - Hardened KDBX parser: `DataReader` now throws on truncated data instead of silently truncating
 - Bounded Argon2 KDF parameters (iterations, memory, parallelism) to prevent resource exhaustion from malicious files
 - Validated variant-map value lengths before decoding
+- Passwords and TOTP secrets stored as AES-GCM `EncryptedValue` in memory (lazy decrypt on demand)
+- Switched favicon provider from Google to DuckDuckGo (privacy)
+- Private/internal domains filtered from favicon fetching
 
 ### Changes
 - Renamed from KeeVault to KeeForge (display name, all internal references, folders, scheme, module name)
 - License changed to GPLv3
-- Switched favicon provider from Google to DuckDuckGo (privacy)
-- Private/internal domains filtered from favicon fetching
-- Passwords and TOTP secrets stored as AES-GCM `EncryptedValue` in memory (lazy decrypt on demand)
 
 ## v1.2.0 (2026-02-26)
 
 ### New Features
-- Opt-in website favicon support with disk cache (Google favicon API, SHA256 cache keys, 7-day TTL)
+- Opt-in website favicon support with disk cache (DuckDuckGo, SHA256 cache keys, 7-day TTL)
 - "Download Website Favicons" toggle in Settings (off by default) with "Clear Favicon Cache" action
 - Auto Face ID unlock on app open (opt-in setting in Security)
 - Auto Face ID unlock in AutoFill extension (shared via App Group)
