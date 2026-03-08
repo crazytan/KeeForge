@@ -4,13 +4,35 @@ import UIKit
 final class ScreenProtectionService {
     private weak var windowScene: UIWindowScene?
     private var shieldWindow: UIWindow?
+    private var capturedObservation: NSObjectProtocol?
 
     init(windowScene: UIWindowScene? = nil) {
         self.windowScene = windowScene
+        startMonitoringScreenCapture()
     }
 
     func updateScene(_ scene: UIWindowScene?) {
         windowScene = scene
+    }
+
+    private func startMonitoringScreenCapture() {
+        capturedObservation = NotificationCenter.default.addObserver(
+            forName: UIScreen.capturedDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.handleScreenCaptureChange()
+            }
+        }
+    }
+
+    private func handleScreenCaptureChange() {
+        if UIScreen.main.isCaptured {
+            showShield()
+        } else {
+            hideShield()
+        }
     }
 
     func showShield() {
