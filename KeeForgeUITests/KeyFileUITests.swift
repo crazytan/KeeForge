@@ -77,29 +77,32 @@ final class KeyFileUnlockUITests: KeeForgeUITestCase {
         XCTAssertTrue(keyFileLabel.waitForExistence(timeout: 10), "Key file name did not appear — injection may have failed")
     }
 
-    private func unlockWithKeyFileOnly() {
+    private func unlockWithKeyFile() {
         waitForKeyFileInjection()
+
+        // demo-keyfile.kdbx requires password "demo" + key file
+        let passwordField = app.secureTextFields["unlock.password.field"]
+        passwordField.tap()
+        passwordField.typeText("demo")
 
         let unlockButton = app.buttons["unlock.button"]
         XCTAssertTrue(unlockButton.waitForExistence(timeout: 5), "Unlock button not found")
         unlockButton.tap()
 
-        sleep(3)
-
         XCTAssertTrue(
             app.buttons["lock.button"].waitForExistence(timeout: 20),
-            "Vault did not unlock with key file only"
+            "Vault did not unlock with password + key file"
         )
     }
 
-    func testKeyFileOnlyUnlockSucceeds() {
-        // demo-keyfile.kdbx uses key file only (no password)
+    func testKeyFileUnlockSucceeds() {
+        // demo-keyfile.kdbx requires password "demo" + key file
         // The key file is auto-injected via UI_TEST_KEYFILE_BASE64 env var
-        unlockWithKeyFileOnly()
+        unlockWithKeyFile()
     }
 
     func testKeyFileUnlockShowsEntries() {
-        unlockWithKeyFileOnly()
+        unlockWithKeyFile()
 
         // After unlock, entries should be visible (navigate into a group if needed)
         let entryLabel = firstVisibleEntryLabel()
