@@ -36,11 +36,6 @@ struct UnlockView: View {
             allowedContentTypes: [.init(filenameExtension: "kdbx")!],
             onCompletion: handleFileSelection
         )
-        .fileImporter(
-            isPresented: $showKeyFilePicker,
-            allowedContentTypes: [.item],
-            onCompletion: handleKeyFileSelection
-        )
         .onAppear {
             autoUnlockWithBiometricsIfNeeded()
         }
@@ -141,6 +136,11 @@ struct UnlockView: View {
         }
         .padding(.horizontal)
         .accessibilityIdentifier("unlock.keyfile.row")
+        .fileImporter(
+            isPresented: $showKeyFilePicker,
+            allowedContentTypes: [.item],
+            onCompletion: handleKeyFileSelection
+        )
     }
 
     private var noFileSection: some View {
@@ -184,6 +184,7 @@ struct UnlockView: View {
         guard viewModel.hasSavedFile else { return }
         guard viewModel.canUseBiometrics else { return }
         guard case .locked = viewModel.state else { return }
+        guard !viewModel.didManuallyLock else { return }
         guard autoUnlockAttemptedLockCycle != viewModel.lockCycleID else { return }
 
         autoUnlockAttemptedLockCycle = viewModel.lockCycleID

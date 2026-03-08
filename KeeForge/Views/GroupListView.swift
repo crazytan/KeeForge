@@ -53,7 +53,7 @@ struct GroupListView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         HStack(spacing: 12) {
                             Button {
-                                viewModel.lock()
+                                viewModel.lock(manuallyTriggered: true)
                             } label: {
                                 Image(systemName: "lock")
                             }

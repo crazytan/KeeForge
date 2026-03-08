@@ -13,6 +13,7 @@ struct KeeForgeApp: App {
                     switch newPhase {
                     case .active:
                         screenProtectionService.hideShield()
+                        viewModel.didManuallyLock = false
                         viewModel.resetInactivityTimer()
                     case .inactive:
                         if !BiometricService.isBiometricAuthInProgress {
