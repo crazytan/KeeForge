@@ -73,8 +73,14 @@ enum CredentialIdentityStoreManager: Sendable {
               let userHandleData = passkey.userHandleData
         else { return nil }
 
+        // Strip www. prefix — WebAuthn RP identifiers don't include it,
+        // but KeePassXC sometimes stores it with the prefix
+        let rpID = passkey.relyingParty.hasPrefix("www.")
+            ? String(passkey.relyingParty.dropFirst(4))
+            : passkey.relyingParty
+
         return ASPasskeyCredentialIdentity(
-            relyingPartyIdentifier: passkey.relyingParty,
+            relyingPartyIdentifier: rpID,
             userName: passkey.username,
             credentialID: credentialIDData,
             userHandle: userHandleData,
