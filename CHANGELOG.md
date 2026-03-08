@@ -8,6 +8,7 @@
 - **Feedback button** — links to GitHub Issues from the About section
 - **Entry timestamps** — created and modified dates shown in entry detail view
 - **Sort direction** — ascending/descending toggle for all sort orders
+- **Passkey support** — detect and authenticate with passkeys stored in KeePassXC format (`KPEX_PASSKEY_*` custom fields). AutoFill extension provides passkey credentials to Safari and apps. Passkey badge on entries, detail view shows relying party + username.
 
 ### Security
 - Exponential backoff after failed password attempts (2s→4s→8s→16s→30s cap)
@@ -20,7 +21,7 @@
 - App Store screenshot test: reveals colored password + scrolls to show TOTP
 
 ### TODO (v2 roadmap)
-- [ ] Passkey support → see docs/PASSKEY_IMPLEMENTATION.md
+- [ ] Passkey creation (Phase 3 — requires KDBX write support)
 - [ ] Editing support (create/modify entries)
 - [ ] iPad-native layout
 - [ ] Sync / attachments
