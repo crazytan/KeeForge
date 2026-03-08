@@ -97,7 +97,11 @@ enum SettingsService {
 
     static var quickAutoFillEnabled: Bool {
         get {
-            sharedDefaults.bool(forKey: Key.quickAutoFillEnabled)
+            // Default to true — QuickType AutoFill should be on unless explicitly disabled
+            if sharedDefaults.object(forKey: Key.quickAutoFillEnabled) == nil {
+                return true
+            }
+            return sharedDefaults.bool(forKey: Key.quickAutoFillEnabled)
         }
         set {
             sharedDefaults.set(newValue, forKey: Key.quickAutoFillEnabled)

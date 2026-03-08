@@ -73,13 +73,32 @@ final class AppStoreScreenshots: XCTestCase {
             sleep(2)
             saveScreenshot("03-entry-list")
 
-            // 4. Entry detail with TOTP - tap Chase Bank
+            // 4. Entry detail with TOTP - tap Coinbase (has TOTP + recognizable brand)
             let entries = app.buttons.matching(identifier: "entry.navlink").allElementsBoundByIndex
-            let totpEntry = entries.first(where: { $0.label.contains("Chase") || $0.label.contains("Coinbase") })
+            let totpEntry = entries.first(where: { $0.label.contains("Coinbase") })
+                ?? entries.first(where: { $0.label.contains("Chase") })
                 ?? entries.first(where: { $0.exists && $0.isHittable })
             if let totpEntry {
                 totpEntry.tap()
                 sleep(1)
+
+                // Reveal password to show colored text
+                let revealButton = app.buttons["entry.password.reveal"]
+                if revealButton.waitForExistence(timeout: 3) && revealButton.isHittable {
+                    revealButton.tap()
+                    sleep(1)
+                }
+
+                // Scroll down just enough to show TOTP without losing password
+                let totpCopy = app.buttons["entry.copy.totp"]
+                if totpCopy.exists && !totpCopy.isHittable {
+                    // Drag from mid-screen up by ~150pt to nudge TOTP into view
+                    let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+                    let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+                    start.press(forDuration: 0.1, thenDragTo: end)
+                    sleep(1)
+                }
+
                 saveScreenshot("04-entry-detail")
             }
 
