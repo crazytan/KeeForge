@@ -66,6 +66,9 @@ struct SettingsView: View {
 
                     LabeledContent("Version", value: appVersion)
 
+                    Link(destination: URL(string: "https://github.com/crazytan/KeeForge/issues")!) {
+                        Label("Send Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
+                    }
                 }
             }
             .navigationTitle("Settings")

@@ -6,7 +6,10 @@
 - (none currently)
 
 ### Features
-- (none currently)
+- [ ] Feedback button in About page → links to GitHub Issues
+- [ ] Tip Jar in About page — consumable IAPs (Apple takes 30%, but it's the approved approach)
+- [ ] Key file support (`.key` / `.keyx` — composite key unlock)
+- [ ] Passkey support
 
 ### Security (from SECURITY_AUDIT.md)
 - [x] **HIGH-1/2:** Lazy decrypt — passwords and TOTP secrets held as AES-GCM `EncryptedValue` in memory, decrypted on demand only (copy, reveal, AutoFill, TOTP generation). Session key nilled on lock.
