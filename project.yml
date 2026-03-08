@@ -76,6 +76,7 @@ targets:
       - path: KeeForge/Services/CredentialIdentityStoreManager.swift
       - path: KeeForge/Services/FaviconService.swift
       - path: KeeForge/Services/CoordinatedFileReader.swift
+      - path: KeeForge/Services/KeyFileProcessor.swift
 
   KeeForgeUITests:
     type: bundle.ui-testing
@@ -110,6 +111,20 @@ targets:
       - path: TestFixtures/test.kdbx
         buildPhase: resources
       - path: TestFixtures/demo.kdbx
+        buildPhase: resources
+      - path: TestFixtures/demo-keyfile.kdbx
+        buildPhase: resources
+      - path: TestFixtures/demo-keyfile.key
+        buildPhase: resources
+      - path: TestFixtures/test-binary.key
+        buildPhase: resources
+      - path: TestFixtures/test-hex.key
+        buildPhase: resources
+      - path: TestFixtures/test-v1.key
+        buildPhase: resources
+      - path: TestFixtures/test-v2.keyx
+        buildPhase: resources
+      - path: TestFixtures/test-arbitrary.key
         buildPhase: resources
 
 schemes:

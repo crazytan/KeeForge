@@ -1,9 +1,13 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct UnlockView: View {
     @Bindable var viewModel: DatabaseViewModel
     @State private var password = ""
     @State private var showFilePicker = false
+    @State private var showKeyFilePicker = false
+    @State private var keyFileData: Data?
+    @State private var keyFileName: String?
     @State private var autoUnlockAttemptedLockCycle: Int?
     @FocusState private var passwordFocused: Bool
 
@@ -32,6 +36,11 @@ struct UnlockView: View {
             allowedContentTypes: [.init(filenameExtension: "kdbx")!],
             onCompletion: handleFileSelection
         )
+        .fileImporter(
+            isPresented: $showKeyFilePicker,
+            allowedContentTypes: [.item],
+            onCompletion: handleKeyFileSelection
+        )
         .onAppear {
             autoUnlockWithBiometricsIfNeeded()
         }
@@ -53,12 +62,14 @@ struct UnlockView: View {
                 .padding(.horizontal)
                 .accessibilityIdentifier("unlock.password.field")
 
+            keyFileRow
+
             Button(action: unlockWithPassword) {
                 Label("Unlock", systemImage: "lock.open.fill")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(password.isEmpty || isUnlocking)
+            .disabled(password.isEmpty && keyFileData == nil || isUnlocking)
             .padding(.horizontal)
             .accessibilityIdentifier("unlock.button")
 
@@ -92,6 +103,46 @@ struct UnlockView: View {
         }
     }
 
+    private var keyFileRow: some View {
+        HStack {
+            Label {
+                if let keyFileName {
+                    Text(keyFileName)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                } else {
+                    Text("None")
+                        .foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "key.fill")
+            }
+
+            Spacer()
+
+            if keyFileData != nil {
+                Button {
+                    keyFileData = nil
+                    keyFileName = nil
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear key file")
+                .accessibilityIdentifier("unlock.keyfile.clear")
+            }
+
+            Button("Select") {
+                showKeyFilePicker = true
+            }
+            .font(.subheadline)
+            .accessibilityIdentifier("unlock.keyfile.select")
+        }
+        .padding(.horizontal)
+        .accessibilityIdentifier("unlock.keyfile.row")
+    }
+
     private var noFileSection: some View {
         VStack(spacing: 16) {
             Text("Open a .kdbx database to get started")
@@ -112,9 +163,10 @@ struct UnlockView: View {
     }
 
     private func unlockWithPassword() {
-        guard !password.isEmpty else { return }
+        let pwd = password.isEmpty ? nil : password
+        guard pwd != nil || keyFileData != nil else { return }
         Task {
-            await viewModel.unlock(password: password)
+            await viewModel.unlock(password: password, keyFileData: keyFileData)
             if case .unlocked = viewModel.state {
                 password = ""
             }
@@ -143,6 +195,27 @@ struct UnlockView: View {
         case .success(let url):
             viewModel.selectFile(url)
             passwordFocused = true
+        case .failure:
+            break
+        }
+    }
+
+    private func handleKeyFileSelection(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            let hasSecurityScope = url.startAccessingSecurityScopedResource()
+            defer {
+                if hasSecurityScope {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            do {
+                keyFileData = try Data(contentsOf: url)
+                keyFileName = url.lastPathComponent
+            } catch {
+                keyFileData = nil
+                keyFileName = nil
+            }
         case .failure:
             break
         }

@@ -91,9 +91,9 @@ final class SettingsServiceTests: XCTestCase {
 
     // MARK: - Quick AutoFill
 
-    func testQuickAutoFillEnabledDefaultsToFalse() {
+    func testQuickAutoFillEnabledDefaultsToTrue() {
         sharedDefaults.removeObject(forKey: quickAutoFillEnabledKey)
-        XCTAssertFalse(SettingsService.quickAutoFillEnabled)
+        XCTAssertTrue(SettingsService.quickAutoFillEnabled)
     }
 
     func testQuickAutoFillEnabledPersists() {

@@ -97,9 +97,32 @@ enum KDBXCrypto {
 
     /// Build the composite key from master password (hash of hash)
     static func compositeKey(password: String) -> Data {
-        let pwdData = Data(password.utf8)
-        let hash = sha256(pwdData)
-        return sha256(hash)
+        compositeKey(password: password, keyFileData: nil)
+    }
+
+    /// Build the composite key from password and/or key file data.
+    ///
+    /// ```
+    /// preKey = []
+    /// if password: preKey += SHA256(password_utf8)
+    /// if keyFile:  preKey += processKeyFile(keyFileData)
+    /// compositeKey = SHA256(preKey)
+    /// ```
+    static func compositeKey(password: String?, keyFileData: Data?) -> Data {
+        var preKey = Data()
+
+        if let password, !password.isEmpty {
+            let pwdHash = sha256(Data(password.utf8))
+            preKey.append(pwdHash)
+        }
+
+        if let keyFileData {
+            if let keyFileKey = try? KeyFileProcessor.processKeyFile(keyFileData) {
+                preKey.append(keyFileKey)
+            }
+        }
+
+        return sha256(preKey)
     }
 
     // MARK: - AES-256-CBC Decrypt

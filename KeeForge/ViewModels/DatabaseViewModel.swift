@@ -143,7 +143,7 @@ final class DatabaseViewModel {
         state = .locked
     }
 
-    func unlock(password: String) async {
+    func unlock(password: String, keyFileData: Data? = nil) async {
         guard let url = effectiveDatabaseURL else {
             state = .error("No database file selected")
             return
@@ -162,11 +162,11 @@ final class DatabaseViewModel {
                 let hasMagic = data.starts(with: Self.kdbxMagic)
                 Self.diagnostic("unlock: read \(data.count) bytes, kdbxMagic=\(hasMagic)")
             }
-            let compositeKey = KDBXCrypto.compositeKey(password: password)
+            let compositeKey = KDBXCrypto.compositeKey(password: password, keyFileData: keyFileData)
             let sessionKey = SymmetricKey(size: .bits256)
 
             let root = try await Task.detached {
-                try KDBXParser.parse(data: data, password: password, sessionKey: sessionKey)
+                try KDBXParser.parse(data: data, password: password, keyFileData: keyFileData, sessionKey: sessionKey)
             }.value
 
             self.rootGroup = root

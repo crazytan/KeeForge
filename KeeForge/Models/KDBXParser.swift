@@ -101,6 +101,12 @@ enum KDBXParser {
         return try parse(data: data, compositeKey: compositeKey, sessionKey: sessionKey)
     }
 
+    /// Parse and decrypt with password and/or key file data
+    static func parse(data: Data, password: String?, keyFileData: Data?, sessionKey: SymmetricKey) throws -> KPGroup {
+        let compositeKey = KDBXCrypto.compositeKey(password: password, keyFileData: keyFileData)
+        return try parse(data: data, compositeKey: compositeKey, sessionKey: sessionKey)
+    }
+
     static func parse(data: Data, compositeKey: Data, sessionKey: SymmetricKey) throws -> KPGroup {
         var reader = DataReader(data: data)
 
