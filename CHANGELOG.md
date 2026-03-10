@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+### TODO (v2 roadmap)
+- [ ] Passkey AutoFill relying party normalization (strip www. prefix)
+- [ ] Passkey creation (Phase 3 — requires KDBX write support)
+- [ ] Editing support (create/modify entries)
+- [ ] Cloud drive integration (WebDAV, Google Drive, OneDrive, Dropbox)
+- [ ] iPad-native layout
+- [ ] Sync / attachments
+
+## v1.4.1 (2026-03-09)
 
 - Fixed AutoFill for cloud-hosted databases by caching the selected `.kdbx` in the App Group shared container and refreshing it from the main app.
 
@@ -33,15 +41,6 @@
 
 ### Known Issues
 - AutoFill extension cannot access databases opened from cloud drives (Google Drive, OneDrive, Dropbox). Use local files for AutoFill.
-
-### TODO (v2 roadmap)
-- [ ] Passkey AutoFill relying party normalization (strip www. prefix)
-- [ ] Passkey creation (Phase 3 — requires KDBX write support)
-- [ ] Editing support (create/modify entries)
-- [ ] Cloud drive integration (WebDAV, Google Drive, OneDrive, Dropbox)
-- [ ] Cloud file AutoFill support (copy to App Group container)
-- [ ] iPad-native layout
-- [ ] Sync / attachments
 
 ## v1.3.0 (2026-03-03)
 
