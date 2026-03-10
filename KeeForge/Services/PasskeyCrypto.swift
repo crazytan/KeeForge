@@ -1,17 +1,18 @@
 import CryptoKit
 import Foundation
-import Security
 
 /// Cryptographic operations for passkey (WebAuthn) authentication.
 enum PasskeyCrypto: Sendable {
+    static let assertionFlags: UInt8 = 0x1D
+    static let registrationFlags: UInt8 = 0x5D
 
-    // MARK: - PEM → SecKey
+    // MARK: - PEM -> P256
 
-    /// Parse a PEM-encoded EC P-256 private key into a SecKey.
+    /// Parse a PEM-encoded EC P-256 private key into a CryptoKit signing key.
     ///
     /// Supports both PKCS#8 (`BEGIN PRIVATE KEY`) and SEC1 (`BEGIN EC PRIVATE KEY`) formats.
     /// KeePassXC stores keys in PKCS#8 PEM format.
-    static func privateKey(fromPEM pem: String) throws -> SecKey {
+    static func privateKey(fromPEM pem: String) throws -> P256.Signing.PrivateKey {
         let stripped = pem
             .replacingOccurrences(of: "-----BEGIN PRIVATE KEY-----", with: "")
             .replacingOccurrences(of: "-----END PRIVATE KEY-----", with: "")
@@ -25,13 +26,17 @@ enum PasskeyCrypto: Sendable {
             throw PasskeyError.invalidPEM
         }
 
-        // Try to extract the raw 32-byte EC private key from DER.
-        // PKCS#8 wraps SEC1 which wraps the raw key.
+        if let privateKey = try? P256.Signing.PrivateKey(derRepresentation: derData) {
+            return privateKey
+        }
+
         let rawKey = try extractP256RawKey(from: derData)
 
-        // Use CryptoKit to create P256 key then export as SecKey
-        let p256Key = try P256.Signing.PrivateKey(rawRepresentation: rawKey)
-        return try p256KeyToSecKey(p256Key)
+        do {
+            return try P256.Signing.PrivateKey(rawRepresentation: rawKey)
+        } catch {
+            throw PasskeyError.invalidKeyData
+        }
     }
 
     /// Extract the 32-byte raw P-256 private key from DER-encoded data.
@@ -89,23 +94,6 @@ enum PasskeyCrypto: Sendable {
         throw PasskeyError.invalidKeyData
     }
 
-    private static func p256KeyToSecKey(_ key: P256.Signing.PrivateKey) throws -> SecKey {
-        // x963 representation: 04 || x(32) || y(32) || k(32) = 97 bytes
-        let x963 = key.x963Representation
-
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
-            kSecAttrKeySizeInBits as String: 256,
-        ]
-
-        var error: Unmanaged<CFError>?
-        guard let secKey = SecKeyCreateWithData(x963 as CFData, attributes as CFDictionary, &error) else {
-            throw error?.takeRetainedValue() ?? PasskeyError.keyCreationFailed
-        }
-        return secKey
-    }
-
     // MARK: - Assertion signing
 
     /// Sign a WebAuthn assertion (authenticator data + client data hash).
@@ -114,13 +102,13 @@ enum PasskeyCrypto: Sendable {
     ///   - relyingPartyID: The relying party identifier (used to compute RP ID hash).
     ///   - clientDataHash: The SHA-256 hash of the client data JSON (provided by the system).
     ///   - counter: The signature counter value (KeePassXC always uses 0).
-    ///   - privateKey: The SecKey to sign with.
+    ///   - privateKey: The P-256 signing key to sign with.
     /// - Returns: A tuple of (authenticatorData, signature).
     static func signAssertion(
         relyingPartyID: String,
         clientDataHash: Data,
         counter: UInt32 = 0,
-        privateKey: SecKey
+        privateKey: P256.Signing.PrivateKey
     ) throws -> (authenticatorData: Data, signature: Data) {
         let authenticatorData = buildAuthenticatorData(
             relyingPartyID: relyingPartyID,
@@ -131,7 +119,7 @@ enum PasskeyCrypto: Sendable {
         var signedData = authenticatorData
         signedData.append(clientDataHash)
 
-        let signature = try ecdsaSign(data: signedData, with: privateKey)
+        let signature = try privateKey.signature(for: signedData).derRepresentation
 
         return (authenticatorData, signature)
     }
@@ -140,33 +128,19 @@ enum PasskeyCrypto: Sendable {
     ///
     /// Format (37 bytes for assertion):
     ///   - rpIdHash: SHA-256 of RP ID (32 bytes)
-    ///   - flags: 1 byte (UP=0x01 | UV=0x04 = 0x05)
+    ///   - flags: 1 byte (UP | UV | BE | BS = 0x1D for assertions)
     ///   - signCount: 4 bytes big-endian
     static func buildAuthenticatorData(
         relyingPartyID: String,
-        counter: UInt32 = 0
+        counter: UInt32 = 0,
+        flags: UInt8 = assertionFlags
     ) -> Data {
         let rpIdHash = Data(SHA256.hash(data: Data(relyingPartyID.utf8)))
-        let flags: UInt8 = 0x05 // UP (user present) | UV (user verified)
         var data = rpIdHash
         data.append(flags)
         var bigEndianCounter = counter.bigEndian
         data.append(Data(bytes: &bigEndianCounter, count: 4))
         return data
-    }
-
-    /// ECDSA-SHA256 signature using Security framework.
-    private static func ecdsaSign(data: Data, with key: SecKey) throws -> Data {
-        var error: Unmanaged<CFError>?
-        guard let signature = SecKeyCreateSignature(
-            key,
-            .ecdsaSignatureMessageX962SHA256,
-            data as CFData,
-            &error
-        ) as Data? else {
-            throw error?.takeRetainedValue() ?? PasskeyError.signatureFailed
-        }
-        return signature
     }
 }
 

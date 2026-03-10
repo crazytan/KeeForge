@@ -171,22 +171,21 @@ final class PasskeyCryptoTests: XCTestCase {
         let key = P256.Signing.PrivateKey()
         let pem = pemEncode(key)
 
-        let secKey = try PasskeyCrypto.privateKey(fromPEM: pem)
-        XCTAssertNotNil(secKey)
+        let privateKey = try PasskeyCrypto.privateKey(fromPEM: pem)
 
         // Sign an assertion
         let clientDataHash = Data(SHA256.hash(data: Data("test-client-data".utf8)))
         let (authData, signature) = try PasskeyCrypto.signAssertion(
             relyingPartyID: "example.com",
             clientDataHash: clientDataHash,
-            privateKey: secKey
+            privateKey: privateKey
         )
 
         // Authenticator data should be 37 bytes (32 rpIdHash + 1 flags + 4 counter)
         XCTAssertEqual(authData.count, 37)
 
-        // Verify flags byte: UP | UV = 0x05
-        XCTAssertEqual(authData[32], 0x05)
+        // Verify flags byte: UP | UV | BE | BS
+        XCTAssertEqual(authData[32], PasskeyCrypto.assertionFlags)
 
         // Counter should be 0 (4 bytes big-endian)
         XCTAssertEqual(authData[33], 0)
@@ -199,7 +198,7 @@ final class PasskeyCryptoTests: XCTestCase {
         XCTAssertEqual(authData.prefix(32), expectedRPHash)
 
         // Verify signature is valid
-        let publicKey = key.publicKey
+        let publicKey = privateKey.publicKey
         var signedData = authData
         signedData.append(clientDataHash)
         let isValid = try publicKey.isValidSignature(
@@ -215,11 +214,22 @@ final class PasskeyCryptoTests: XCTestCase {
             counter: 42
         )
         XCTAssertEqual(authData.count, 37)
+        XCTAssertEqual(authData[32], PasskeyCrypto.assertionFlags)
         // Counter 42 = 0x0000002A big-endian
         XCTAssertEqual(authData[33], 0)
         XCTAssertEqual(authData[34], 0)
         XCTAssertEqual(authData[35], 0)
         XCTAssertEqual(authData[36], 42)
+    }
+
+    func testAuthenticatorDataUsesRegistrationFlagsWhenRequested() {
+        let authData = PasskeyCrypto.buildAuthenticatorData(
+            relyingPartyID: "example.com",
+            flags: PasskeyCrypto.registrationFlags
+        )
+
+        XCTAssertEqual(authData.count, 37)
+        XCTAssertEqual(authData[32], PasskeyCrypto.registrationFlags)
     }
 
     func testInvalidPEMThrows() {
@@ -235,8 +245,27 @@ final class PasskeyCryptoTests: XCTestCase {
         let base64 = derData.base64EncodedString(options: .lineLength64Characters)
         let pem = "-----BEGIN PRIVATE KEY-----\n\(base64)\n-----END PRIVATE KEY-----"
 
-        let secKey = try PasskeyCrypto.privateKey(fromPEM: pem)
-        XCTAssertNotNil(secKey)
+        let privateKey = try PasskeyCrypto.privateKey(fromPEM: pem)
+        XCTAssertEqual(privateKey.publicKey.x963Representation, key.publicKey.x963Representation)
+    }
+
+    func testPasskeyIdentityNormalizesRelyingPartyURL() {
+        let entry = KPEntry(
+            title: "Passkey Entry",
+            username: "",
+            password: .empty,
+            url: "https://example.com",
+            customFields: [
+                PasskeyCredential.credentialIDKey: "dGVzdC1jcmVkZW50aWFsLWlk",
+                PasskeyCredential.privateKeyPEMKey: "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZz8y\n-----END PRIVATE KEY-----",
+                PasskeyCredential.relyingPartyKey: "https://www.Example.com/login",
+                PasskeyCredential.usernameKey: "alice@example.com",
+                PasskeyCredential.userHandleKey: "dXNlci1oYW5kbGU",
+            ]
+        )
+        let identity = CredentialIdentityStoreManager.passkeyIdentity(for: entry)
+
+        XCTAssertEqual(identity?.relyingPartyIdentifier, "example.com")
     }
 
     // MARK: - Helpers

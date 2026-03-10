@@ -12,6 +12,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private var didAttemptAutoBiometricUnlock = false
     private var targetRecordIdentifier: String?
     private var pendingPasskeyRequest: ASPasskeyCredentialRequest?
+    private var pendingPasskeyRequestParameters: ASPasskeyCredentialRequestParameters?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +23,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         self.serviceIdentifiers = serviceIdentifiers
         targetRecordIdentifier = nil
         pendingPasskeyRequest = nil
+        pendingPasskeyRequestParameters = nil
         didAttemptAutoBiometricUnlock = false
         pendingUnlock = true
     }
@@ -30,6 +32,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         serviceIdentifiers = [credentialIdentity.serviceIdentifier]
         targetRecordIdentifier = credentialIdentity.recordIdentifier
         pendingPasskeyRequest = nil
+        pendingPasskeyRequestParameters = nil
         didAttemptAutoBiometricUnlock = false
         // Delay unlock to ensure the view is fully presented,
         // otherwise biometric auth fails with "not interactive".
@@ -46,6 +49,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         self.serviceIdentifiers = serviceIdentifiers
         targetRecordIdentifier = nil
         pendingPasskeyRequest = nil
+        pendingPasskeyRequestParameters = requestParameters
         didAttemptAutoBiometricUnlock = false
         pendingUnlock = true
     }
@@ -57,6 +61,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                 return
             }
             pendingPasskeyRequest = passkeyRequest
+            pendingPasskeyRequestParameters = nil
             targetRecordIdentifier = passkeyRequest.credentialIdentity.recordIdentifier
             didAttemptAutoBiometricUnlock = false
             pendingUnlock = true
@@ -113,12 +118,14 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                 let context = try await BiometricService.authenticate(reason: "AutoFill with KeeForge")
                 let compositeKey = try KeychainService.retrieveCompositeKey(for: databasePath, context: context)
                 try await loadEntries(password: nil, compositeKey: compositeKey)
+                let passwordEntries = parsedEntries.filter(\.hasPassword)
 
-                if let recordIdentifier, let entry = findEntry(byRecordIdentifier: recordIdentifier) {
+                if let recordIdentifier,
+                   let entry = passwordEntries.first(where: { $0.id.uuidString == recordIdentifier }) {
                     completeRequest(with: entry)
                 } else {
                     let matches = CredentialMatcher.matchedEntries(
-                        from: parsedEntries,
+                        from: passwordEntries,
                         for: [credentialIdentity.serviceIdentifier]
                     )
                     if let entry = matches.first {
@@ -272,8 +279,10 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             } catch {
                 showErrorAndRetry(error)
             }
+        } else if let requestParameters = pendingPasskeyRequestParameters {
+            presentPasskeyMatchesOrFinish(using: requestParameters)
         } else {
-            presentMatchesOrFinish()
+            presentPasswordMatchesOrFinish()
         }
     }
 
@@ -301,8 +310,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         } else {
             allEntries = root.allEntries
         }
-        // Include entries with passwords OR passkeys (when enabled)
-        parsedEntries = allEntries.filter { $0.hasPassword || (SettingsService.passkeyEnabled && $0.hasPasskey) }
+        parsedEntries = allEntries.filter { $0.hasPassword || $0.hasPasskey }
     }
 
     private func loadDatabaseData() throws -> Data {
@@ -325,17 +333,22 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         return try CoordinatedFileReader.readData(from: url)
     }
 
-    private func presentMatchesOrFinish() {
+    private func presentPasswordMatchesOrFinish() {
+        let passwordEntries = parsedEntries.filter(\.hasPassword)
+
         // If we have a target recordIdentifier from QuickType, jump directly to that entry
-        if let recordIdentifier = targetRecordIdentifier, let entry = findEntry(byRecordIdentifier: recordIdentifier) {
+        if let recordIdentifier = targetRecordIdentifier,
+           let entry = passwordEntries.first(where: { $0.id.uuidString == recordIdentifier }) {
             completeRequest(with: entry)
             return
         }
 
-        let matches = CredentialMatcher.matchedEntries(from: parsedEntries, for: serviceIdentifiers)
+        let matches = CredentialMatcher.matchedEntries(from: passwordEntries, for: serviceIdentifiers)
 
         if matches.isEmpty || serviceIdentifiers.isEmpty {
-            presentSearchView(entries: parsedEntries)
+            presentSearchView(entries: passwordEntries) { [weak self] entry in
+                self?.completeRequest(with: entry)
+            }
             return
         }
 
@@ -344,7 +357,9 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             return
         }
 
-        presentEntryPicker(entries: matches)
+        presentEntryPicker(entries: matches) { [weak self] entry in
+            self?.completeRequest(with: entry)
+        }
     }
 
     private func findEntry(byRecordIdentifier recordIdentifier: String) -> KPEntry? {
@@ -352,16 +367,77 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         return parsedEntries.first { $0.id == targetUUID }
     }
 
-    private func presentEntryPicker(entries: [KPEntry]) {
+    private func passkeyEntry(for identity: ASPasskeyCredentialIdentity) -> KPEntry? {
+        let normalizedRelyingParty = CredentialIdentityStoreManager.normalizedRelyingPartyIdentifier(identity.relyingPartyIdentifier)
+
+        let matchesIdentity: (KPEntry) -> Bool = { entry in
+            guard let passkey = entry.passkeyCredential,
+                  let credentialIDData = passkey.credentialIDData
+            else {
+                return false
+            }
+
+            return CredentialIdentityStoreManager.normalizedRelyingPartyIdentifier(passkey.relyingParty) == normalizedRelyingParty &&
+                credentialIDData == identity.credentialID
+        }
+
+        if let recordIdentifier = identity.recordIdentifier,
+           let entry = findEntry(byRecordIdentifier: recordIdentifier),
+           matchesIdentity(entry) {
+            return entry
+        }
+
+        return parsedEntries.first(where: matchesIdentity)
+    }
+
+    private func matchingPasskeyEntries(for requestParameters: ASPasskeyCredentialRequestParameters) -> [KPEntry] {
+        let normalizedRelyingParty = CredentialIdentityStoreManager.normalizedRelyingPartyIdentifier(
+            requestParameters.relyingPartyIdentifier
+        )
+        let allowedCredentialIDs = Set(requestParameters.allowedCredentials)
+
+        return parsedEntries.filter { entry in
+            guard let passkey = entry.passkeyCredential,
+                  let credentialIDData = passkey.credentialIDData
+            else {
+                return false
+            }
+
+            guard CredentialIdentityStoreManager.normalizedRelyingPartyIdentifier(passkey.relyingParty) == normalizedRelyingParty else {
+                return false
+            }
+
+            return allowedCredentialIDs.isEmpty || allowedCredentialIDs.contains(credentialIDData)
+        }
+    }
+
+    private func presentPasskeyMatchesOrFinish(using requestParameters: ASPasskeyCredentialRequestParameters) {
+        let matches = matchingPasskeyEntries(for: requestParameters)
+        guard !matches.isEmpty else {
+            cancelRequest(code: .credentialIdentityNotFound)
+            return
+        }
+
+        if matches.count == 1, let entry = matches.first {
+            completePasskeyRequest(with: entry, requestParameters: requestParameters)
+            return
+        }
+
+        presentEntryPicker(entries: matches) { [weak self] entry in
+            self?.completePasskeyRequest(with: entry, requestParameters: requestParameters)
+        }
+    }
+
+    private func presentEntryPicker(entries: [KPEntry], onSelect: @escaping (KPEntry) -> Void) {
         let alert = UIAlertController(title: "Choose Credential", message: nil, preferredStyle: .alert)
 
         for entry in entries.prefix(10) {
-            let title = entry.title.isEmpty ? entry.username : entry.title
-            let subtitle = entry.username.isEmpty ? "Use credential" : entry.username
-            let label = "\(title) (\(subtitle))"
+            let title = entryDisplayTitle(for: entry)
+            let subtitle = entryDisplaySubtitle(for: entry)
+            let label = title == subtitle ? title : "\(title) (\(subtitle))"
 
-            alert.addAction(UIAlertAction(title: label, style: .default) { [weak self] _ in
-                self?.completeRequest(with: entry)
+            alert.addAction(UIAlertAction(title: label, style: .default) { _ in
+                onSelect(entry)
             })
         }
 
@@ -372,12 +448,12 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         present(alert, animated: true)
     }
 
-    private func presentSearchView(entries: [KPEntry]) {
+    private func presentSearchView(entries: [KPEntry], onSelect: @escaping (KPEntry) -> Void) {
         let searchView = AutoFillSearchView(
             entries: entries,
             onSelect: { [weak self] entry in
                 self?.dismiss(animated: false) {
-                    self?.completeRequest(with: entry)
+                    onSelect(entry)
                 }
             },
             onCancel: { [weak self] in
@@ -395,16 +471,17 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     private func completeRequest(with entry: KPEntry) {
         let user = entry.username.isEmpty ? entry.title : entry.username
-        guard !user.isEmpty else {
+        guard !user.isEmpty, let decryptionKey = sessionKey else {
             cancelRequest(code: .failed)
             return
         }
 
-        let decryptedPassword = (try? entry.password.decrypt(using: sessionKey!)) ?? ""
+        let decryptedPassword = (try? entry.password.decrypt(using: decryptionKey)) ?? ""
         parsedEntries = []
         sessionKey = nil
         targetRecordIdentifier = nil
         pendingPasskeyRequest = nil
+        pendingPasskeyRequestParameters = nil
         let credential = ASPasswordCredential(user: user, password: decryptedPassword)
         extensionContext.completeRequest(withSelectedCredential: credential, completionHandler: nil)
     }
@@ -412,18 +489,34 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     // MARK: - Complete passkey request
 
     private func completePasskeyRequest(_ request: ASPasskeyCredentialRequest) throws {
-        let identity = request.credentialIdentity as! ASPasskeyCredentialIdentity
-        let recordIdentifier = identity.recordIdentifier
-
-        guard let recordIdentifier,
-              let entry = findEntry(byRecordIdentifier: recordIdentifier),
-              let passkey = entry.passkeyCredential
-        else {
+        guard let identity = request.credentialIdentity as? ASPasskeyCredentialIdentity,
+              let entry = passkeyEntry(for: identity) else {
             cancelRequest(code: .credentialIdentityNotFound)
             return
         }
 
-        guard let credentialIDData = passkey.credentialIDData,
+        try completePasskeyRequest(
+            with: entry,
+            relyingPartyID: identity.relyingPartyIdentifier,
+            clientDataHash: request.clientDataHash
+        )
+    }
+
+    private func completePasskeyRequest(with entry: KPEntry, requestParameters: ASPasskeyCredentialRequestParameters) {
+        do {
+            try completePasskeyRequest(
+                with: entry,
+                relyingPartyID: requestParameters.relyingPartyIdentifier,
+                clientDataHash: requestParameters.clientDataHash
+            )
+        } catch {
+            showErrorAndRetry(error)
+        }
+    }
+
+    private func completePasskeyRequest(with entry: KPEntry, relyingPartyID: String, clientDataHash: Data) throws {
+        guard let passkey = entry.passkeyCredential,
+              let credentialIDData = passkey.credentialIDData,
               let userHandleData = passkey.userHandleData
         else {
             cancelRequest(code: .failed)
@@ -431,17 +524,16 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
 
         let privateKey = try PasskeyCrypto.privateKey(fromPEM: passkey.privateKeyPEM)
-        let clientDataHash = request.clientDataHash
 
         let (authenticatorData, signature) = try PasskeyCrypto.signAssertion(
-            relyingPartyID: identity.relyingPartyIdentifier,
+            relyingPartyID: relyingPartyID,
             clientDataHash: clientDataHash,
             privateKey: privateKey
         )
 
         let credential = ASPasskeyAssertionCredential(
             userHandle: userHandleData,
-            relyingParty: identity.relyingPartyIdentifier,
+            relyingParty: relyingPartyID,
             signature: signature,
             clientDataHash: clientDataHash,
             authenticatorData: authenticatorData,
@@ -452,6 +544,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         sessionKey = nil
         targetRecordIdentifier = nil
         pendingPasskeyRequest = nil
+        pendingPasskeyRequestParameters = nil
         extensionContext.completeAssertionRequest(using: credential)
     }
 
@@ -462,6 +555,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         sessionKey = nil
         targetRecordIdentifier = nil
         pendingPasskeyRequest = nil
+        pendingPasskeyRequestParameters = nil
         extensionContext.cancelRequest(withError: ASExtensionError(code))
     }
 
@@ -481,5 +575,37 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         })
 
         present(alert, animated: true)
+    }
+
+    private func entryDisplayTitle(for entry: KPEntry) -> String {
+        if !entry.title.isEmpty {
+            return entry.title
+        }
+
+        if !entry.username.isEmpty {
+            return entry.username
+        }
+
+        if let passkeyUsername = entry.passkeyCredential?.username, !passkeyUsername.isEmpty {
+            return passkeyUsername
+        }
+
+        return "Credential"
+    }
+
+    private func entryDisplaySubtitle(for entry: KPEntry) -> String {
+        if !entry.username.isEmpty {
+            return entry.username
+        }
+
+        if let passkeyUsername = entry.passkeyCredential?.username, !passkeyUsername.isEmpty {
+            return passkeyUsername
+        }
+
+        if let relyingParty = entry.passkeyCredential?.relyingParty, !relyingParty.isEmpty {
+            return relyingParty
+        }
+
+        return "Use credential"
     }
 }

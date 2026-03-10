@@ -456,17 +456,20 @@ final class DatabaseViewModel {
         populateCredentialStoreIfNeeded(root: root)
     }
 
-    private func populateCredentialStoreIfNeeded(root: KPGroup) {
-        guard SettingsService.quickAutoFillEnabled else { return }
-
+    static func credentialStoreEntries(from root: KPGroup) -> [KPEntry] {
         let entries: [KPEntry]
         if let recycleBinID = root.recycleBinUUID {
             entries = root.allEntries(excludingGroupID: recycleBinID)
         } else {
             entries = root.allEntries
         }
-        let withPasswords = entries.filter { $0.hasPassword }
-        CredentialIdentityStoreManager.populate(with: withPasswords)
+
+        return entries.filter { $0.hasPassword || $0.hasPasskey }
+    }
+
+    private func populateCredentialStoreIfNeeded(root: KPGroup) {
+        guard SettingsService.quickAutoFillEnabled else { return }
+        CredentialIdentityStoreManager.populate(with: Self.credentialStoreEntries(from: root))
     }
 
     private static func diagnostic(_ message: String) {

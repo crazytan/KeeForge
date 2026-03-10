@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fixed QuickType AutoFill identities being left stale after refreshing the shared database cache while the app is unlocked.
+- Fixed passkey AutoFill by re-enabling passkey support, registering passkey identities on unlock, and returning WebAuthn assertions with iOS-compatible authenticator flags.
 
 ### TODO (v2 roadmap)
 - [ ] Passkey AutoFill relying party normalization (strip www. prefix)

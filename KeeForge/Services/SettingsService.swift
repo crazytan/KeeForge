@@ -3,7 +3,7 @@ import Foundation
 enum SettingsService {
     // MARK: - Feature Flags
 
-    static let passkeyEnabled = false
+    static let passkeyEnabled = true
 
     // MARK: - Keys
 

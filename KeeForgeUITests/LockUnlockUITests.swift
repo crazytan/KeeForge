@@ -40,14 +40,28 @@ final class LockUnlockUITests: KeeForgeUITestCase {
         let passwordField = app.secureTextFields["unlock.password.field"]
         XCTAssertTrue(passwordField.exists, "Password field should still be visible after failed attempts")
 
+        waitForCurrentLockoutIfNeeded()
+
         // Now unlock with correct password
         passwordField.tap()
-        passwordField.doubleTap()
-        sleep(1)
+        let deleteSequence = String(repeating: XCUIKeyboardKey.delete.rawValue, count: 64)
+        passwordField.typeText(deleteSequence)
         passwordField.typeText("testpassword123")
         app.buttons["unlock.button"].tap()
 
         sleep(3)
         XCTAssertTrue(app.buttons["lock.button"].waitForExistence(timeout: 20), "Should unlock after failed attempts")
+    }
+
+    private func waitForCurrentLockoutIfNeeded() {
+        let errorText = app.staticTexts["unlock.error.label"].label
+        let seconds = errorText
+            .components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .compactMap(Int.init)
+            .first ?? 0
+
+        if seconds > 0 {
+            sleep(UInt32(seconds + 1))
+        }
     }
 }

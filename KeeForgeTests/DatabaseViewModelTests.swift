@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 import SwiftUI
 @testable import KeeForge
 
@@ -102,6 +103,29 @@ final class DatabaseViewModelTests: XCTestCase {
         XCTAssertEqual(populateCallCount, 2)
     }
 
+    func testCredentialStoreEntriesIncludePasskeyOnlyEntries() {
+        let sessionKey = SymmetricKey(size: .bits256)
+        let passwordEntry = KPEntry(
+            title: "Password Entry",
+            username: "alice",
+            password: try! EncryptedValue.encrypt("secret", using: sessionKey),
+            url: "https://example.com"
+        )
+        let passkeyEntry = KPEntry(
+            title: "Passkey Entry",
+            username: "",
+            password: .empty,
+            url: "https://example.com",
+            customFields: passkeyFields()
+        )
+        let noteEntry = KPEntry(title: "Note Entry", username: "", password: .empty, url: "")
+        let root = KPGroup(name: "Root", entries: [passwordEntry, passkeyEntry, noteEntry])
+
+        let identities = DatabaseViewModel.credentialStoreEntries(from: root)
+
+        XCTAssertEqual(Set(identities.map(\.id)), Set([passwordEntry.id, passkeyEntry.id]))
+    }
+
     func testUnlockWithWrongPasswordTransitionsToError() async throws {
         let vm = DatabaseViewModel()
         vm.selectFile(try fixtureURL())
@@ -178,6 +202,16 @@ final class DatabaseViewModelTests: XCTestCase {
     private func fixtureURL() throws -> URL {
         let bundle = Bundle(for: DatabaseViewModelTests.self)
         return try XCTUnwrap(bundle.url(forResource: "test", withExtension: "kdbx"))
+    }
+
+    private func passkeyFields() -> [String: String] {
+        [
+            PasskeyCredential.credentialIDKey: "dGVzdC1jcmVkZW50aWFsLWlk",
+            PasskeyCredential.privateKeyPEMKey: "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgZz8y\n-----END PRIVATE KEY-----",
+            PasskeyCredential.relyingPartyKey: "example.com",
+            PasskeyCredential.usernameKey: "alice@example.com",
+            PasskeyCredential.userHandleKey: "dXNlci1oYW5kbGU",
+        ]
     }
 
     private func mixedCasePrefix(from source: String) -> String {

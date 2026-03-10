@@ -24,9 +24,7 @@ enum CredentialIdentityStoreManager: Sendable {
             }
 
             let passwordIds = entries.flatMap(passwordIdentities(for:))
-            let passkeyIds: [ASPasskeyCredentialIdentity] = SettingsService.passkeyEnabled
-                ? entries.compactMap(passkeyIdentity(for:))
-                : []
+            let passkeyIds = entries.compactMap(passkeyIdentity(for:))
             let totalIdentities = passwordIds.count + passkeyIds.count
             guard totalIdentities > 0 else {
                 logger.info("No credential identities to populate")
@@ -66,11 +64,17 @@ enum CredentialIdentityStoreManager: Sendable {
             let state = await store.state()
             guard state.isEnabled else { return }
 
-            let identities = entries.flatMap(passwordIdentities(for:))
-            guard !identities.isEmpty else { return }
+            let passwordIds = entries.flatMap(passwordIdentities(for:))
+            let passkeyIds = entries.compactMap(passkeyIdentity(for:))
+            guard !passwordIds.isEmpty || !passkeyIds.isEmpty else { return }
 
             do {
-                try await store.removeCredentialIdentities(identities)
+                if !passwordIds.isEmpty {
+                    try await store.removeCredentialIdentities(passwordIds)
+                }
+                if !passkeyIds.isEmpty {
+                    try await store.removeCredentialIdentities(passkeyIds)
+                }
             } catch {
                 logger.error("Failed to remove credential identities: \(error.localizedDescription)")
             }
@@ -85,11 +89,8 @@ enum CredentialIdentityStoreManager: Sendable {
               let userHandleData = passkey.userHandleData
         else { return nil }
 
-        // Strip www. prefix — WebAuthn RP identifiers don't include it,
-        // but KeePassXC sometimes stores it with the prefix
-        let rpID = passkey.relyingParty.hasPrefix("www.")
-            ? String(passkey.relyingParty.dropFirst(4))
-            : passkey.relyingParty
+        let rpID = normalizedRelyingPartyIdentifier(passkey.relyingParty)
+        guard !rpID.isEmpty else { return nil }
 
         return ASPasskeyCredentialIdentity(
             relyingPartyIdentifier: rpID,
@@ -98,6 +99,20 @@ enum CredentialIdentityStoreManager: Sendable {
             userHandle: userHandleData,
             recordIdentifier: entry.id.uuidString
         )
+    }
+
+    static func normalizedRelyingPartyIdentifier(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+
+        let host = CredentialMatcher.hostFromURLString(trimmed) ?? trimmed
+        let lowered = host.lowercased()
+
+        if lowered.hasPrefix("www.") {
+            return String(lowered.dropFirst(4))
+        }
+
+        return lowered
     }
 
     // MARK: - Internal (visible to tests via @testable import)
