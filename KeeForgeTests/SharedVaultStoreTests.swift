@@ -34,12 +34,47 @@ final class SharedVaultStoreTests: XCTestCase {
         XCTAssertNil(DocumentPickerService.loadBookmarkedURL())
     }
 
-    private func makeTemporaryFileURL(name: String) throws -> URL {
+    func testCacheDatabaseCopyWritesLoadableSharedCopy() throws {
+        let sourceData = Data("cached database".utf8)
+        let url = try makeTemporaryFileURL(name: "cache-test.kdbx", contents: sourceData)
+
+        try SharedVaultStore.cacheDatabaseCopy(sourceData, sourceURL: url)
+
+        let cachedURL = try XCTUnwrap(SharedVaultStore.loadCachedDatabaseURL())
+        XCTAssertEqual(cachedURL.lastPathComponent, url.lastPathComponent)
+        XCTAssertEqual(try Data(contentsOf: cachedURL), sourceData)
+    }
+
+    func testLoadDatabaseKeychainPathUsesStoredFilenameWithoutCache() throws {
+        let url = try makeTemporaryFileURL(name: "keychain-path-test.kdbx")
+
+        try SharedVaultStore.saveBookmark(for: url)
+
+        let keychainPath = try XCTUnwrap(SharedVaultStore.loadDatabaseKeychainPath())
+        XCTAssertEqual((keychainPath as NSString).lastPathComponent, url.lastPathComponent)
+    }
+
+    func testClearBookmarkRemovesCachedDatabaseCopy() throws {
+        let sourceData = Data("cached database".utf8)
+        let url = try makeTemporaryFileURL(name: "clear-cache-test.kdbx", contents: sourceData)
+
+        try SharedVaultStore.saveBookmark(for: url)
+        try SharedVaultStore.cacheDatabaseCopy(sourceData, sourceURL: url)
+        XCTAssertNotNil(SharedVaultStore.loadCachedDatabaseURL())
+
+        SharedVaultStore.clearBookmark()
+
+        XCTAssertNil(SharedVaultStore.loadBookmarkedURL())
+        XCTAssertNil(SharedVaultStore.loadCachedDatabaseURL())
+        XCTAssertFalse(FileManager.default.fileExists(atPath: SharedVaultStore.databaseCacheDirectory.path))
+    }
+
+    private func makeTemporaryFileURL(name: String, contents: Data = Data("fixture".utf8)) throws -> URL {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent(name)
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try Data("fixture".utf8).write(to: url)
+        try contents.write(to: url)
         return url
     }
 }

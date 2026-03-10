@@ -144,8 +144,13 @@ final class DatabaseViewModel {
                 url.stopAccessingSecurityScopedResource()
             }
         }
+
+        SharedVaultStore.clearCachedDatabaseCopy()
         if hasSecurityScope {
             try? DocumentPickerService.saveBookmark(for: url)
+        }
+        if let data = try? CoordinatedFileReader.readData(from: url) {
+            cacheDatabaseCopy(data, sourceURL: url)
         }
         databaseURL = url
         didManuallyLock = false
@@ -185,6 +190,7 @@ final class DatabaseViewModel {
 
         do {
             let data = try readSecurityScoped(url: url)
+            cacheDatabaseCopy(data, sourceURL: url)
             if isUITesting {
                 let hasMagic = data.starts(with: Self.kdbxMagic)
                 Self.diagnostic("unlock: read \(data.count) bytes, kdbxMagic=\(hasMagic)")
@@ -240,6 +246,7 @@ final class DatabaseViewModel {
             let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
 
             let data = try readSecurityScoped(url: url)
+            cacheDatabaseCopy(data, sourceURL: url)
             let sessionKey = SymmetricKey(size: .bits256)
 
             let root = try await Task.detached {
@@ -310,6 +317,19 @@ final class DatabaseViewModel {
             }
         }
         return try CoordinatedFileReader.readData(from: url)
+    }
+
+    func refreshSharedDatabaseCacheIfPossible() {
+        guard let url = effectiveDatabaseURL else { return }
+
+        Task.detached(priority: .utility) {
+            do {
+                let data = try Self.readSecurityScopedData(from: url)
+                try SharedVaultStore.cacheDatabaseCopy(data, sourceURL: url)
+            } catch {
+                return
+            }
+        }
     }
 
     private static func uiTestDatabaseURL() -> URL? {
@@ -431,5 +451,25 @@ final class DatabaseViewModel {
     private static func diagnostic(_ message: String) {
         logger.notice("\(message, privacy: .public)")
         print("[DatabaseViewModel] \(message)")
+    }
+
+    private func cacheDatabaseCopy(_ data: Data, sourceURL: URL) {
+        do {
+            try SharedVaultStore.cacheDatabaseCopy(data, sourceURL: sourceURL)
+        } catch {
+            if isUITesting {
+                Self.diagnostic("cacheDatabaseCopy: failed for \(sourceURL.lastPathComponent) '\(error.localizedDescription)'")
+            }
+        }
+    }
+
+    nonisolated private static func readSecurityScopedData(from url: URL) throws -> Data {
+        let hasSecurityScope = url.startAccessingSecurityScopedResource()
+        defer {
+            if hasSecurityScope {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        return try CoordinatedFileReader.readData(from: url)
     }
 }

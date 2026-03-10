@@ -15,6 +15,7 @@ struct KeeForgeApp: App {
                         screenProtectionService.hideShield()
                         viewModel.didManuallyLock = false
                         viewModel.resetInactivityTimer()
+                        viewModel.refreshSharedDatabaseCacheIfPossible()
                     case .inactive:
                         if !BiometricService.isBiometricAuthInProgress {
                             screenProtectionService.showShield()

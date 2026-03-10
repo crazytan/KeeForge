@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed AutoFill for cloud-hosted databases by caching the selected `.kdbx` in the App Group shared container and refreshing it from the main app.
+
 ## v1.4.0 (2026-03-08)
 
 ### New Features

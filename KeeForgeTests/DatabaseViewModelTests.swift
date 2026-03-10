@@ -37,6 +37,17 @@ final class DatabaseViewModelTests: XCTestCase {
         XCTAssertEqual(vm.lockCycleID, 1)
     }
 
+    func testSelectFileCachesDatabaseCopyForAutoFill() throws {
+        let vm = DatabaseViewModel()
+        let url = try fixtureURL()
+
+        vm.selectFile(url)
+
+        let cachedURL = try XCTUnwrap(SharedVaultStore.loadCachedDatabaseURL())
+        XCTAssertEqual(cachedURL.lastPathComponent, url.lastPathComponent)
+        XCTAssertEqual(try Data(contentsOf: cachedURL), try Data(contentsOf: url))
+    }
+
     func testLockIncrementsLockCycle() {
         let vm = DatabaseViewModel()
         XCTAssertEqual(vm.lockCycleID, 0)
@@ -57,6 +68,17 @@ final class DatabaseViewModelTests: XCTestCase {
         XCTAssertState(vm.state, is: .unlocked)
         XCTAssertNotNil(vm.rootGroup)
         XCTAssertFalse(vm.rootGroup?.allEntries.isEmpty ?? true)
+    }
+
+    func testUnlockRefreshesSharedDatabaseCache() async throws {
+        let vm = DatabaseViewModel()
+        let url = try fixtureURL()
+        vm.selectFile(url)
+
+        await vm.unlock(password: fixturePassword)
+
+        let cachedURL = try XCTUnwrap(SharedVaultStore.loadCachedDatabaseURL())
+        XCTAssertEqual(try Data(contentsOf: cachedURL), try Data(contentsOf: url))
     }
 
     func testUnlockWithWrongPasswordTransitionsToError() async throws {

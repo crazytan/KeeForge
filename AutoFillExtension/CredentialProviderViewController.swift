@@ -106,12 +106,12 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
         Task {
             do {
-                guard let url = SharedVaultStore.loadBookmarkedURL() else {
+                guard let databasePath = SharedVaultStore.loadDatabaseKeychainPath() else {
                     throw ASExtensionError(.failed)
                 }
 
                 let context = try await BiometricService.authenticate(reason: "AutoFill with KeeForge")
-                let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
+                let compositeKey = try KeychainService.retrieveCompositeKey(for: databasePath, context: context)
                 try await loadEntries(password: nil, compositeKey: compositeKey)
 
                 if let recordIdentifier, let entry = findEntry(byRecordIdentifier: recordIdentifier) {
@@ -153,12 +153,12 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
         Task {
             do {
-                guard let url = SharedVaultStore.loadBookmarkedURL() else {
+                guard let databasePath = SharedVaultStore.loadDatabaseKeychainPath() else {
                     throw ASExtensionError(.failed)
                 }
 
                 let context = try await BiometricService.authenticate(reason: "Passkey sign-in with KeeForge")
-                let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
+                let compositeKey = try KeychainService.retrieveCompositeKey(for: databasePath, context: context)
                 try await loadEntries(password: nil, compositeKey: compositeKey)
 
                 try completePasskeyRequest(request)
@@ -220,7 +220,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     private var canUseBiometrics: Bool {
         guard BiometricService.isAvailable else { return false }
-        guard let databasePath = SharedVaultStore.loadBookmarkedURL()?.path else { return false }
+        guard let databasePath = SharedVaultStore.loadDatabaseKeychainPath() else { return false }
         return KeychainService.hasStoredKey(for: databasePath)
     }
 
@@ -250,12 +250,12 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         Task {
             defer { isUnlockInProgress = false }
             do {
-                guard let url = SharedVaultStore.loadBookmarkedURL() else {
+                guard let databasePath = SharedVaultStore.loadDatabaseKeychainPath() else {
                     throw NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.failed.rawValue)
                 }
 
                 let context = try await BiometricService.authenticate(reason: "Unlock KeeForge for AutoFill")
-                let compositeKey = try KeychainService.retrieveCompositeKey(for: url.path, context: context)
+                let compositeKey = try KeychainService.retrieveCompositeKey(for: databasePath, context: context)
                 try await loadEntries(password: nil, compositeKey: compositeKey)
                 afterUnlock()
             } catch {
@@ -278,11 +278,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     }
 
     private func loadEntries(password: String?, compositeKey: Data?) async throws {
-        guard let url = SharedVaultStore.loadBookmarkedURL() else {
-            throw NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.failed.rawValue)
-        }
-
-        let data = try readSecurityScoped(url: url)
+        let data = try loadDatabaseData()
         let key = SymmetricKey(size: .bits256)
 
         let root = try await Task.detached {
@@ -307,6 +303,18 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
         // Include entries with passwords OR passkeys (when enabled)
         parsedEntries = allEntries.filter { $0.hasPassword || (SettingsService.passkeyEnabled && $0.hasPasskey) }
+    }
+
+    private func loadDatabaseData() throws -> Data {
+        if let cachedURL = SharedVaultStore.loadCachedDatabaseURL() {
+            return try CoordinatedFileReader.readData(from: cachedURL)
+        }
+
+        guard let bookmarkedURL = SharedVaultStore.loadBookmarkedURL() else {
+            throw NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.failed.rawValue)
+        }
+
+        return try readSecurityScoped(url: bookmarkedURL)
     }
 
     private func readSecurityScoped(url: URL) throws -> Data {
