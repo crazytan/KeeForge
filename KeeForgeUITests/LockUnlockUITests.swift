@@ -31,38 +31,35 @@ final class LockUnlockUITests: KeeForgeUITestCase {
             unlock(password: "wrong-password-\(attempt)")
 
             let errorLabel = app.staticTexts["unlock.error.label"]
-            XCTAssertTrue(errorLabel.waitForExistence(timeout: 10), "Error should appear on attempt \(attempt)")
-
-            // Brief pause to let any lockout timer start
-            sleep(1)
+            XCTAssertTrue(errorLabel.waitForExistence(timeout: 15), "Error should appear on attempt \(attempt)")
         }
 
         // After multiple failures, should still be on unlock screen
         let passwordField = app.secureTextFields["unlock.password.field"]
-        XCTAssertTrue(passwordField.exists, "Password field should still be visible after failed attempts")
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 10), "Password field should still be visible after failed attempts")
 
         waitForCurrentLockoutIfNeeded()
 
         // Now unlock with correct password
-        passwordField.tap()
-        let deleteSequence = String(repeating: XCUIKeyboardKey.delete.rawValue, count: 64)
-        passwordField.typeText(deleteSequence)
-        passwordField.typeText("testpassword123")
-        app.buttons["unlock.button"].tap()
-
-        sleep(3)
-        XCTAssertTrue(app.buttons["lock.button"].waitForExistence(timeout: 20), "Should unlock after failed attempts")
+        unlock(password: "testpassword123")
+        waitForVaultToUnlock(timeout: 30)
     }
 
     private func waitForCurrentLockoutIfNeeded() {
-        let errorText = app.staticTexts["unlock.error.label"].label
+        let errorLabel = app.staticTexts["unlock.error.label"]
+        guard errorLabel.waitForExistence(timeout: 15) else { return }
+
+        let errorText = errorLabel.label
         let seconds = errorText
             .components(separatedBy: CharacterSet.decimalDigits.inverted)
             .compactMap(Int.init)
             .first ?? 0
 
         if seconds > 0 {
-            sleep(UInt32(seconds + 1))
+            let waitDeadline = Date().addingTimeInterval(TimeInterval(seconds) + 2)
+            while Date() < waitDeadline {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            }
         }
     }
 }

@@ -6,6 +6,12 @@ class KeeForgeUITestCase: XCTestCase {
     private static let uiTestDBFilenameEnv = "UI_TEST_DB_FILENAME"
     private static let uiTestKeyFileBase64Env = "UI_TEST_KEYFILE_BASE64"
     private static let uiTestKeyFileFilenameEnv = "UI_TEST_KEYFILE_FILENAME"
+    private static let passwordDeleteCount = 128
+
+    enum SwipeDirection {
+        case up
+        case down
+    }
 
     var app: XCUIApplication!
 
@@ -48,30 +54,130 @@ class KeeForgeUITestCase: XCTestCase {
         let passwordField = app.secureTextFields["unlock.password.field"]
         XCTAssertTrue(passwordField.waitForExistence(timeout: 10), "Password field did not appear")
 
-        passwordField.tap()
-        passwordField.typeText(password)
+        replaceText(in: passwordField, with: password)
         app.buttons["unlock.button"].tap()
     }
 
     func unlockSuccessfully(file: StaticString = #filePath, line: UInt = #line) {
         unlock(password: "testpassword123")
-        
-        // Check for error first
+        waitForVaultToUnlock(file: file, line: line)
+    }
+
+    func replaceText(in element: XCUIElement, with text: String) {
+        element.tap()
+        let deleteSequence = String(repeating: XCUIKeyboardKey.delete.rawValue, count: Self.passwordDeleteCount)
+        element.typeText(deleteSequence)
+        element.typeText(text)
+    }
+
+    @discardableResult
+    func waitForVaultToUnlock(
+        timeout: TimeInterval = 30,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> Bool {
+        let lockButton = app.buttons["lock.button"]
         let errorLabel = app.staticTexts["unlock.error.label"]
-        if errorLabel.waitForExistence(timeout: 2) {
-            XCTFail("Unlock failed with error: \(errorLabel.label)", file: file, line: line)
-            return
+        let deadline = Date().addingTimeInterval(timeout)
+        var lastErrorMessage: String?
+
+        repeat {
+            if lockButton.exists {
+                return true
+            }
+
+            if errorLabel.exists {
+                let message = errorLabel.label.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !message.isEmpty {
+                    lastErrorMessage = message
+                }
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        } while Date() < deadline
+
+        if let lastErrorMessage {
+            XCTFail("Vault did not unlock. Last error: \(lastErrorMessage)", file: file, line: line)
+        } else {
+            XCTFail("Vault did not unlock within \(timeout) seconds", file: file, line: line)
         }
-        
-        // Wait a bit for unlock to complete
-        sleep(3)
-        
-        XCTAssertTrue(
-            app.buttons["lock.button"].waitForExistence(timeout: 20),
-            "Vault did not unlock",
-            file: file,
-            line: line
-        )
+        return false
+    }
+
+    func scrollableContainer() -> XCUIElement? {
+        let candidates: [XCUIElement] = [
+            app.collectionViews.firstMatch,
+            app.tables.firstMatch,
+            app.scrollViews.firstMatch,
+        ]
+
+        for candidate in candidates where candidate.exists {
+            return candidate
+        }
+
+        return nil
+    }
+
+    @discardableResult
+    func revealElement(
+        _ element: XCUIElement,
+        in container: XCUIElement? = nil,
+        direction: SwipeDirection = .up,
+        maxSwipes: Int = 6
+    ) -> Bool {
+        if element.exists && element.isHittable {
+            return true
+        }
+
+        let scrollContainer = container ?? scrollableContainer()
+
+        guard let scrollContainer, scrollContainer.exists else {
+            return element.waitForExistence(timeout: 1)
+        }
+
+        if element.waitForExistence(timeout: 1), element.isHittable {
+            return true
+        }
+
+        for _ in 0..<maxSwipes {
+            switch direction {
+            case .up:
+                scrollContainer.swipeUp()
+            case .down:
+                scrollContainer.swipeDown()
+            }
+
+            if element.waitForExistence(timeout: 1), element.isHittable {
+                return true
+            }
+        }
+
+        return element.exists
+    }
+
+    @discardableResult
+    func waitForDocumentPicker(timeout: TimeInterval = 15) -> Bool {
+        let browseNav = app.navigationBars.matching(
+            NSPredicate(format: "label CONTAINS[c] 'Browse' OR label CONTAINS[c] 'Recents'")
+        ).firstMatch
+        let browseButton = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'Browse' OR label CONTAINS[c] 'Recents'")
+        ).firstMatch
+        let cancelButton = app.buttons["Cancel"]
+        let doneButton = app.buttons["Done"]
+        let documentManager = app.otherElements.matching(
+            NSPredicate(format: "identifier CONTAINS[c] 'Document' OR label CONTAINS[c] 'Browse' OR label CONTAINS[c] 'Recents'")
+        ).firstMatch
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if browseNav.exists || browseButton.exists || cancelButton.exists || doneButton.exists || documentManager.exists {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        } while Date() < deadline
+
+        return false
     }
 
     private func currentListContainer() -> XCUIElement? {

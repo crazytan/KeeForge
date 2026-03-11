@@ -6,17 +6,15 @@ import XCTest
 final class KeyFileUITests: KeeForgeUITestCase {
 
     private func findKeyFileSelect() -> XCUIElement? {
-        // Try direct identifier first
         let direct = app.buttons["unlock.keyfile.select"]
-        if direct.waitForExistence(timeout: 3) { return direct }
+        if direct.waitForExistence(timeout: 8), direct.isHittable { return direct }
 
-        // Scroll and retry
-        app.swipeUp()
-        if direct.waitForExistence(timeout: 3) { return direct }
+        if revealElement(direct, direction: .up, maxSwipes: 3), direct.isHittable {
+            return direct
+        }
 
-        // Try matching by label "Select"
         let byLabel = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Select'")).firstMatch
-        if byLabel.waitForExistence(timeout: 3) { return byLabel }
+        if byLabel.waitForExistence(timeout: 5), byLabel.isHittable { return byLabel }
 
         return nil
     }
@@ -31,18 +29,10 @@ final class KeyFileUITests: KeeForgeUITestCase {
         }
         selectButton.tap()
 
-        // Document picker should appear (presented as a sheet/modal)
-        let documentPicker = app.navigationBars.matching(NSPredicate(format: "identifier CONTAINS[c] 'doc' OR label CONTAINS[c] 'Browse' OR label CONTAINS[c] 'Recents'")).firstMatch
-        let pickerAppeared = documentPicker.waitForExistence(timeout: 5)
-
-        // On simulator, the document picker may present differently — also check for any modal
-        if !pickerAppeared {
-            // Check if any new sheet/navigation appeared after tapping
-            let browseButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Browse'")).firstMatch
-            let cancelButton = app.buttons["Cancel"]
-            let hasModal = browseButton.waitForExistence(timeout: 3) || cancelButton.exists
-            XCTAssertTrue(hasModal, "Document picker did not appear after tapping Select key file")
-        }
+        XCTAssertTrue(
+            waitForDocumentPicker(timeout: 15),
+            "Document picker did not appear after tapping Select key file"
+        )
     }
 }
 

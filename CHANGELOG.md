@@ -10,6 +10,7 @@
 ## Unreleased
 
 - Fixed Xcode Cloud test failures by adding missing `@MainActor` isolation to UI tests and aligning passkey test expectations with raw relying party identifiers
+- Fixed three flaky UI tests for Xcode Cloud by removing fixed unlock sleeps, waiting for the key file document picker more defensively, and scrolling Settings content on smaller simulators
 
 ## v1.5.0 (2026-03-10)
 
