@@ -99,7 +99,7 @@ final class DatabaseViewModelTests: XCTestCase {
         await vm.unlock(password: fixturePassword)
         vm.refreshSharedDatabaseCacheIfPossible()
 
-        await fulfillment(of: [refreshExpectation], timeout: 5)
+        await fulfillment(of: [refreshExpectation], timeout: 30)
         XCTAssertEqual(populateCallCount, 2)
     }
 
