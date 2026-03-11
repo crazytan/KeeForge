@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class EntryDetailUITests: KeeForgeUITestCase {
     func testEntryDetailCopyActions() {
         unlockSuccessfully()

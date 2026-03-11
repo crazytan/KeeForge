@@ -249,7 +249,7 @@ final class PasskeyCryptoTests: XCTestCase {
         XCTAssertEqual(privateKey.publicKey.x963Representation, key.publicKey.x963Representation)
     }
 
-    func testPasskeyIdentityNormalizesRelyingPartyURL() {
+    func testPasskeyIdentityUsesRawLowercasedRelyingPartyIdentifier() {
         let entry = KPEntry(
             title: "Passkey Entry",
             username: "",

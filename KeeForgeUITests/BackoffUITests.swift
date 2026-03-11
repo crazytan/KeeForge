@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class BackoffUITests: KeeForgeUITestCase {
 
     func testBackoffMessageAppearsAfterRepeatedFailures() {

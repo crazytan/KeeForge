@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class NavigationUITests: KeeForgeUITestCase {
     func testCanNavigateGroupsThenEntries() {
         unlockSuccessfully()

@@ -7,6 +7,10 @@
 - [ ] iPad-native layout
 - [ ] Sync / attachments
 
+## Unreleased
+
+- Fixed Xcode Cloud test failures by adding missing `@MainActor` isolation to UI tests and aligning passkey test expectations with raw relying party identifiers
+
 ## v1.5.0 (2026-03-10)
 
 ### New Features
