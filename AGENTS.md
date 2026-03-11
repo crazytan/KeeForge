@@ -225,6 +225,38 @@ Key file test fixtures: `test-binary.key`, `test-hex.key`, `test-v1.key`, `test-
 - `openAnyEntry()` — navigate groups to find and tap an entry
 - `firstVisibleEntryLabel()` — get title of first visible entry
 
+## Release Process (Xcode Cloud)
+
+KeeForge uses Xcode Cloud for automated release builds.
+
+### How it works
+
+1. Bump version in `project.yml` (`MARKETING_VERSION`)
+2. Update `CHANGELOG.md` with release notes
+3. Commit and tag: `git tag v1.X.0 && git push origin v1.X.0`
+4. Xcode Cloud picks up the tag → builds → runs all tests (unit + UI) → archives → uploads to TestFlight → submits for App Store review
+
+### Setup
+
+- **`ci_scripts/ci_post_clone.sh`** — runs after Xcode Cloud clones the repo. Installs XcodeGen and generates the `.xcodeproj`
+- **Workflow trigger:** tag matching `v*` (configured in App Store Connect / Xcode)
+- **Signing:** handled automatically by Xcode Cloud (cloud-managed certificates)
+- **Scheme:** `KeeForge` (includes unit tests + UI tests)
+
+### Manual release (fallback)
+
+```bash
+# Bump version
+sed -i '' 's/MARKETING_VERSION: "X.Y.Z"/MARKETING_VERSION: "X.Y.Z"/' project.yml
+
+# Build, test, archive locally
+xcodegen generate
+xcodebuild test -scheme KeeForge -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild archive -scheme KeeForge -archivePath build/KeeForge.xcarchive
+
+# Upload via Xcode Organizer or xcrun altool
+```
+
 ## CHANGELOG
 
 **Always update `CHANGELOG.md` when committing a feature or bug fix.** Add a bullet to the `## Unreleased` section describing the change. Use past tense for fixes ("Fixed ...") and present tense for features ("Add ..."). Keep entries concise. Do NOT modify entries under released versions (v1.0.0, v1.1.0, etc.).
