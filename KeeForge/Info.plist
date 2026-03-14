@@ -12,6 +12,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
