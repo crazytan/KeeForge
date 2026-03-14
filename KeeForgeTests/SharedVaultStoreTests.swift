@@ -34,6 +34,40 @@ final class SharedVaultStoreTests: XCTestCase {
         XCTAssertNil(DocumentPickerService.loadBookmarkedURL())
     }
 
+    func testDocumentPickerRecognizesKDBXExtensionWithoutReadingHeader() {
+        let url = URL(fileURLWithPath: "/tmp/vault.kdbx")
+        var didReadHeader = false
+
+        let isSupported = DocumentPickerService.isSupportedDatabaseFile(at: url) { _, _ in
+            didReadHeader = true
+            return Data()
+        }
+
+        XCTAssertTrue(isSupported)
+        XCTAssertFalse(didReadHeader)
+    }
+
+    func testDocumentPickerRecognizesKDBXHeaderWhenProviderURLHasNoExtension() {
+        let url = URL(fileURLWithPath: "/tmp/File Provider Storage/vault")
+
+        let isSupported = DocumentPickerService.isSupportedDatabaseFile(at: url) { _, requestedBytes in
+            XCTAssertEqual(requestedBytes, 8)
+            return Data([0x03, 0xD9, 0xA2, 0x9A, 0x67, 0xFB, 0x4B, 0xB5, 0x00, 0x01])
+        }
+
+        XCTAssertTrue(isSupported)
+    }
+
+    func testDocumentPickerRejectsUnsupportedFileWhenExtensionAndHeaderDoNotMatch() {
+        let url = URL(fileURLWithPath: "/tmp/readme.txt")
+
+        let isSupported = DocumentPickerService.isSupportedDatabaseFile(at: url) { _, _ in
+            Data("not-a-database".utf8)
+        }
+
+        XCTAssertFalse(isSupported)
+    }
+
     func testCacheDatabaseCopyWritesLoadableSharedCopy() throws {
         let sourceData = Data("cached database".utf8)
         let url = try makeTemporaryFileURL(name: "cache-test.kdbx", contents: sourceData)

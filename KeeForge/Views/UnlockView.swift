@@ -7,6 +7,7 @@ struct UnlockView: View {
     private enum PickerKind { case database, keyFile }
     @State private var activePicker: PickerKind?
     @State private var showPicker = false
+    @State private var selectionError: String?
     @State private var keyFileData: Data?
     @State private var keyFileName: String?
     @State private var autoUnlockAttemptedLockCycle: Int?
@@ -29,12 +30,20 @@ struct UnlockView: View {
                 noFileSection
             }
 
+            if let errorMessage {
+                Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+                    .font(.caption)
+                    .padding(.horizontal)
+                    .accessibilityIdentifier("unlock.error.label")
+            }
+
             Spacer()
         }
         .padding()
         .fileImporter(
             isPresented: $showPicker,
-            allowedContentTypes: [.item],
+            allowedContentTypes: pickerContentTypes,
             onCompletion: { result in
                 switch activePicker {
                 case .keyFile:
@@ -89,6 +98,7 @@ struct UnlockView: View {
             }
 
             Button("Choose Different File") {
+                selectionError = nil
                 activePicker = .database
                 showPicker = true
             }
@@ -98,15 +108,6 @@ struct UnlockView: View {
             if isUnlocking {
                 ProgressView("Decrypting...")
             }
-
-            if case .error(let message) = viewModel.state {
-                Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
-                    .font(.caption)
-                    .padding(.horizontal)
-                    .accessibilityIdentifier("unlock.error.label")
-            }
-
         }
     }
 
@@ -141,6 +142,7 @@ struct UnlockView: View {
             }
 
             Button("Select") {
+                selectionError = nil
                 activePicker = .keyFile
                 showPicker = true
             }
@@ -156,13 +158,38 @@ struct UnlockView: View {
             Text("Open a .kdbx database to get started")
                 .foregroundStyle(.secondary)
 
-            Button(action: { activePicker = .database; showPicker = true }) {
+            Button(action: {
+                selectionError = nil
+                activePicker = .database
+                showPicker = true
+            }) {
                 Label("Open Database", systemImage: "folder.badge.plus")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .padding(.horizontal)
         }
+    }
+
+    private var pickerContentTypes: [UTType] {
+        switch activePicker {
+        case .keyFile:
+            [.item]
+        case .database, .none:
+            [DocumentPickerService.databaseContentType]
+        }
+    }
+
+    private var errorMessage: String? {
+        if let selectionError {
+            return selectionError
+        }
+
+        if case .error(let message) = viewModel.state {
+            return message
+        }
+
+        return nil
     }
 
     private var isUnlocking: Bool {
@@ -212,11 +239,16 @@ struct UnlockView: View {
     private func handleFileSelection(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
-            guard url.pathExtension.lowercased() == "kdbx" else { return }
+            guard isSupportedDatabaseSelection(url) else {
+                selectionError = "Please select a KeePass .kdbx database."
+                return
+            }
+            selectionError = nil
             viewModel.selectFile(url)
             passwordFocused = true
-        case .failure:
-            break
+        case .failure(let error):
+            guard !isUserCancelledPicker(error) else { return }
+            selectionError = error.localizedDescription
         }
     }
 
@@ -239,5 +271,25 @@ struct UnlockView: View {
         case .failure:
             break
         }
+    }
+
+    private func isSupportedDatabaseSelection(_ url: URL) -> Bool {
+        if DocumentPickerService.isLikelyDatabaseFile(url) {
+            return true
+        }
+
+        let hasSecurityScope = url.startAccessingSecurityScopedResource()
+        defer {
+            if hasSecurityScope {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        return DocumentPickerService.isSupportedDatabaseFile(at: url)
+    }
+
+    private func isUserCancelledPicker(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.code == NSUserCancelledError
     }
 }

@@ -20,6 +20,34 @@ enum CoordinatedFileReader {
         return try result!.get()
     }
 
+    static func readDataPrefix(from url: URL, byteCount: Int) throws -> Data {
+        var coordinatorError: NSError?
+        var result: Result<Data, Error>?
+
+        let coordinator = NSFileCoordinator()
+        coordinator.coordinate(
+            readingItemAt: url,
+            options: [],
+            error: &coordinatorError
+        ) { coordinatedURL in
+            result = Result {
+                let handle = try FileHandle(forReadingFrom: coordinatedURL)
+                defer { try? handle.close() }
+                return try handle.read(upToCount: byteCount) ?? Data()
+            }
+        }
+
+        if let coordinatorError {
+            throw coordinatorError
+        }
+
+        guard let result else {
+            throw CocoaError(.fileReadUnknown)
+        }
+
+        return try result.get()
+    }
+
     static func writeData(_ data: Data, to url: URL, options: Data.WritingOptions = [.atomic]) throws {
         var coordinatorError: NSError?
         var writeResult: Result<Void, Error>?

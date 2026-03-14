@@ -11,6 +11,8 @@
 
 - Fixed Xcode Cloud test failures by adding missing `@MainActor` isolation to UI tests and aligning passkey test expectations with raw relying party identifiers
 - Fixed three flaky UI tests for Xcode Cloud by removing fixed unlock sleeps, waiting for the key file document picker more defensively, and scrolling Settings content on smaller simulators
+- Fixed additional Xcode Cloud UI test flakes by reusing the shared document-picker and unlock wait helpers and removing a fixed sort-order sleep
+- Fixed iPad document picker selection from Recents by declaring the `.kdbx` document type and validating provider URLs by file signature
 
 ## v1.5.0 (2026-03-10)
 
