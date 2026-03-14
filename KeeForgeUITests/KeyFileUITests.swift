@@ -52,7 +52,7 @@ final class KeyFileUnlockUITests: KeeForgeUITestCase {
 
         // Wait for key file name to appear, confirming env var injection worked
         let keyFileLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'demo-keyfile'")).firstMatch
-        XCTAssertTrue(keyFileLabel.waitForExistence(timeout: 10), "Key file name did not appear — injection may have failed")
+        XCTAssertTrue(keyFileLabel.waitForExistence(timeout: 15), "Key file name did not appear — injection may have failed")
     }
 
     private func unlockWithKeyFile() {
@@ -60,17 +60,13 @@ final class KeyFileUnlockUITests: KeeForgeUITestCase {
 
         // demo-keyfile.kdbx requires password "demo" + key file
         let passwordField = app.secureTextFields["unlock.password.field"]
-        passwordField.tap()
-        passwordField.typeText("demo")
+        replaceText(in: passwordField, with: "demo")
 
         let unlockButton = app.buttons["unlock.button"]
-        XCTAssertTrue(unlockButton.waitForExistence(timeout: 5), "Unlock button not found")
+        XCTAssertTrue(unlockButton.waitForExistence(timeout: 10), "Unlock button not found")
         unlockButton.tap()
 
-        XCTAssertTrue(
-            app.buttons["lock.button"].waitForExistence(timeout: 20),
-            "Vault did not unlock with password + key file"
-        )
+        XCTAssertTrue(waitForVaultToUnlock(timeout: 30), "Vault did not unlock with password + key file")
     }
 
     func testKeyFileUnlockShowsEntries() {

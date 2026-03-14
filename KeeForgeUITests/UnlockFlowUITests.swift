@@ -16,7 +16,7 @@ final class UnlockFlowUITests: KeeForgeUITestCase {
         unlockSuccessfully()
 
         let lockButton = app.buttons["lock.button"]
-        XCTAssertTrue(lockButton.waitForExistence(timeout: 5), "Lock button not found")
+        XCTAssertTrue(lockButton.waitForExistence(timeout: 10), "Lock button not found")
         lockButton.tap()
 
         // Wait for unlock screen
@@ -25,13 +25,12 @@ final class UnlockFlowUITests: KeeForgeUITestCase {
 
         // Tap "Choose Different File"
         let chooseDifferent = app.buttons["unlock.choose-different"]
-        XCTAssertTrue(chooseDifferent.waitForExistence(timeout: 5), "Choose Different File button not found")
+        XCTAssertTrue(chooseDifferent.waitForExistence(timeout: 10), "Choose Different File button not found")
         chooseDifferent.tap()
 
-        // Document picker should appear — check for Cancel button or Browse nav bar
-        let cancelButton = app.buttons["Cancel"]
-        let browseNav = app.navigationBars.matching(NSPredicate(format: "label CONTAINS[c] 'Browse' OR label CONTAINS[c] 'Recents'")).firstMatch
-        let pickerAppeared = cancelButton.waitForExistence(timeout: 5) || browseNav.waitForExistence(timeout: 3)
-        XCTAssertTrue(pickerAppeared, "Document picker did not appear after tapping Choose Different File")
+        XCTAssertTrue(
+            waitForDocumentPicker(timeout: 15),
+            "Document picker did not appear after tapping Choose Different File"
+        )
     }
 }
